@@ -234,7 +234,7 @@ final class ASRService: ObservableObject {
 
     /// Gets a provider for a specific model (without changing the active selection)
     /// Used for downloading models without switching the active model.
-    private func getProvider(for model: SettingsStore.SpeechModel) -> TranscriptionProvider {
+    func getProvider(for model: SettingsStore.SpeechModel) -> TranscriptionProvider {
         switch model {
         case .appleSpeechAnalyzer:
             if #available(macOS 26.0, *) {

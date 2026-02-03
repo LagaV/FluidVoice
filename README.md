@@ -56,6 +56,12 @@ https://github.com/user-attachments/assets/c57ef6d5-f0a1-4a3f-a121-637533442c24
 - **Smart typing** directly into any app
 - **Menu bar integration** for quick access
 - **Auto-updates** with seamless restart
+- **Local API**: Automate transcriptions via HTTP requests
+
+## New Features (v1.6)
+- **Local Transcription API**: Full HTTP API for automating file transcriptions.
+- **Backlog Management**: View, manage, and clear transcription history directly in the app.
+- **VTT Output**: Export transcriptions as WebVTT subtitles.
 
 ## Supported Models
 
@@ -92,6 +98,13 @@ Universal support (runs on Intel & Apple Silicon). Supports 99 languages.
 ## Join our small community to help us grow and give feedback :) ( Or just hang?!)   
 
 https://discord.gg/VUPHaKSvYV  
+
+https://discord.gg/VUPHaKSvYV  
+
+## API Documentation
+
+FluidVoice includes a fully functional local API for automation.
+👉 [Read the API Documentation](Documentation/API.md)
 
 ## Building from Source
 

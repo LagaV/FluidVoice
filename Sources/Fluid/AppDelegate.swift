@@ -248,33 +248,55 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func requestAccessibilityPermissions() {
+        print("[System Log] Requesting accessibility permissions...")
         // Never show if already trusted
-        guard !AXIsProcessTrusted() else { return }
+        let isTrusted = AXIsProcessTrusted()
+        print("[System Log] Currently trusted: \(isTrusted)")
+        
+        guard !isTrusted else { 
+            print("[System Log] Already trusted, skipping prompt.")
+            return 
+        }
 
         // Per-session debounce
-        if AXPromptState.hasPromptedThisSession { return }
+        if AXPromptState.hasPromptedThisSession { 
+            print("[System Log] Already prompted this session, skipping.")
+            return 
+        }
 
         // Cooldown: avoid re-prompting too often across launches
         let cooldownKey = "AXLastPromptAt"
         let now = Date().timeIntervalSince1970
         let last = UserDefaults.standard.double(forKey: cooldownKey)
         let oneDay: Double = 24 * 60 * 60
+        
+        // Log the cooldown state
         if last > 0, (now - last) < oneDay {
+            print("[System Log] Prompt is on cooldown (last: \(Date(timeIntervalSince1970: last))).")
+            DebugLogger.shared.info("Accessibility prompt on cooldown (last: \(Date(timeIntervalSince1970: last)))", source: "AppDelegate")
+            // For debugging, we might want to comment this out, but let's just log it first.
+            // If the user says "No log entry", it means this return hit silently.
+            // Now they will see it.
             return
         }
 
         DebugLogger.shared.warning("Accessibility permissions required for global hotkeys.", source: "AppDelegate")
         DebugLogger.shared.info("Prompting for Accessibility permission…", source: "AppDelegate")
+        print("[System Log] Calling AXIsProcessTrustedWithOptions...")
 
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-        AXIsProcessTrustedWithOptions(options)
+        let result = AXIsProcessTrustedWithOptions(options)
+        print("[System Log] AXIsProcessTrustedWithOptions returned: \(result)")
 
         AXPromptState.hasPromptedThisSession = true
         UserDefaults.standard.set(now, forKey: cooldownKey)
 
         // If still not trusted shortly after, deep-link to the Accessibility pane for convenience
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-            guard !AXIsProcessTrusted(),
+            let trustedAfter = AXIsProcessTrusted()
+            print("[System Log] Check after prompt: \(trustedAfter)")
+            
+            guard !trustedAfter,
                   let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")
             else { return }
             NSWorkspace.shared.open(url)

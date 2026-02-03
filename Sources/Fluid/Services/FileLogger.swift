@@ -30,6 +30,9 @@ final class FileLogger {
         self.backupLogURL = self.logDirectory.appendingPathComponent("Fluid.log.1", isDirectory: false)
         self.legacyLogFileURL = self.logDirectory.appendingPathComponent("fluid.log", isDirectory: false)
         self.legacyBackupLogURL = self.logDirectory.appendingPathComponent("fluid.log.1", isDirectory: false)
+        
+        // Print the log path to stdout so the user can see it in Console.app
+        print("[System Log] FileLogger writing to: \(self.logFileURL.path)")
 
         self.queue.sync {
             self.createLogDirectoryIfNeeded()

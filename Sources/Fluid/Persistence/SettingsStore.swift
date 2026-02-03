@@ -87,6 +87,10 @@ final class SettingsStore: ObservableObject {
         static let fillerWords = "FillerWords"
         static let removeFillerWordsEnabled = "RemoveFillerWordsEnabled"
 
+        // API Settings
+        static let enableAPI = "EnableAPI"
+        static let apiBacklogLimit = "APIBacklogLimit"
+
         // GAAV Mode (removes capitalization and trailing punctuation)
         static let gaavModeEnabled = "GAAVModeEnabled"
 
@@ -744,6 +748,33 @@ final class SettingsStore: ObservableObject {
         set {
             objectWillChange.send()
             self.defaults.set(newValue, forKey: Keys.fluid1InterestCaptured)
+        }
+    }
+
+    // MARK: - API Settings
+
+    var enableAPI: Bool {
+        get {
+            let value = self.defaults.object(forKey: Keys.enableAPI)
+            if value == nil { return true }
+            return self.defaults.bool(forKey: Keys.enableAPI)
+        }
+        set {
+            objectWillChange.send()
+            self.defaults.set(newValue, forKey: Keys.enableAPI)
+            // Post notification for APIService to observe
+            NotificationCenter.default.post(name: NSNotification.Name("EnableAPIChanged"), object: nil)
+        }
+    }
+
+    var apiBacklogLimit: Int {
+        get {
+            let value = self.defaults.integer(forKey: Keys.apiBacklogLimit)
+            return value == 0 ? 50 : value // Default to 50 items
+        }
+        set {
+            objectWillChange.send()
+            self.defaults.set(newValue, forKey: Keys.apiBacklogLimit)
         }
     }
 

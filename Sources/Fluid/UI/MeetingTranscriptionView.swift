@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 struct MeetingTranscriptionView: View {
     let asrService: ASRService
     @StateObject private var transcriptionService: MeetingTranscriptionService
+    @ObservedObject private var backlogManager = BacklogManager.shared
     @State private var selectedFileURL: URL?
     @Environment(\.theme) private var theme
 
@@ -68,6 +69,14 @@ struct MeetingTranscriptionView: View {
                     if let error = transcriptionService.error {
                         self.errorCard(error: error)
                     }
+                    
+                    // Backlog / History Section
+                    if !self.backlogManager.jobs.isEmpty {
+                        Divider()
+                            .padding(.vertical, 8)
+                        
+                        self.backlogList
+                    }
                 }
                 .padding(24)
             }
@@ -87,6 +96,121 @@ struct MeetingTranscriptionView: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
+    }
+
+    // MARK: - Backlog List
+    
+    private var backlogList: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("History & Backlog")
+                    .font(.headline)
+                
+                Spacer()
+                
+                if self.backlogManager.jobs.contains(where: { $0.status == .completed || $0.status == .failed }) {
+                    Button("Clear History") {
+                        self.backlogManager.clearCompleted()
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(.secondary)
+                    .font(.caption)
+                }
+            }
+            
+            VStack(spacing: 8) {
+                // Sort by newest first
+                ForEach(self.backlogManager.jobs.sorted(by: { $0.createdAt > $1.createdAt })) { job in
+                    self.jobRow(for: job)
+                }
+            }
+        }
+    }
+    
+    private func jobRow(for job: TranscriptionJob) -> some View {
+        HStack {
+            // Icon based on status
+            Group {
+                switch job.status {
+                case .pending:
+                    Image(systemName: "hourglass")
+                        .foregroundColor(.secondary)
+                case .processing:
+                    ProgressView()
+                        .controlSize(.small)
+                case .completed:
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(Color.fluidGreen)
+                case .failed:
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.red)
+                }
+            }
+            .frame(width: 24)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(job.fileURL.lastPathComponent)
+                    .font(.system(size: 14, weight: .medium))
+                    .lineLimit(1)
+                
+                HStack(spacing: 6) {
+                    Text(job.createdAt.formatted(date: .abbreviated, time: .shortened))
+                    
+                    if let modelId = job.modelId {
+                        Text("•")
+                        Text(modelId)
+                    }
+                    
+                    if let duration = job.processingDuration {
+                        Text("•")
+                        Text("\(String(format: "%.1fs", duration))")
+                    }
+                }
+                .font(.caption)
+                .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+            
+            if job.status == .completed, let resultText = job.resultText {
+                Button("View") {
+                    // Load into main view
+                    let result = TranscriptionResult(
+                        text: resultText,
+                        confidence: 1.0, // We don't store confidence in backlog yet, default to 1
+                        duration: 0, // We don't store audio duration in backlog yet
+                        processingTime: job.processingDuration ?? 0,
+                        fileName: job.fileURL.lastPathComponent
+                    )
+                    self.transcriptionService.result = result
+                    self.transcriptionService.error = nil
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+            } else if job.status == .failed, let error = job.error {
+                 Text(error)
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .lineLimit(1)
+            } else if job.status == .processing {
+                Text("Processing...")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            } else {
+                Text("Pending")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(self.theme.palette.cardBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(self.theme.palette.cardBorder.opacity(0.3), lineWidth: 1)
+                )
+        )
     }
 
     // MARK: - File Selection Card

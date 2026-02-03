@@ -372,6 +372,48 @@ struct SettingsView: View {
                     .padding(16)
                 }
 
+                // API Settings Card
+                ThemedCard(style: .standard) {
+                    VStack(alignment: .leading, spacing: 14) {
+                        Label("File Transcription API", systemImage: "server.rack")
+                            .font(.headline)
+                            .foregroundStyle(.primary)
+
+                        VStack(spacing: 16) {
+                            self.settingsToggleRow(
+                                title: "Enable API Server",
+                                description: "Allow external applications to submit files for transcription (Port 7086).",
+                                isOn: Binding(
+                                    get: { SettingsStore.shared.enableAPI },
+                                    set: { SettingsStore.shared.enableAPI = $0 }
+                                )
+                            )
+
+                            if SettingsStore.shared.enableAPI {
+                                Divider().opacity(0.2)
+                                
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Backlog Limit")
+                                            .font(.body)
+                                        Text("Maximum number of transcription jobs to keep in history.")
+                                            .font(.subheadline)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    Spacer()
+                                    TextField("Limit", value: Binding(
+                                        get: { SettingsStore.shared.apiBacklogLimit },
+                                        set: { SettingsStore.shared.apiBacklogLimit = $0 }
+                                    ), formatter: NumberFormatter())
+                                    .textFieldStyle(.roundedBorder)
+                                    .frame(width: 80)
+                                }
+                            }
+                        }
+                    }
+                    .padding(16)
+                }
+
                 // Microphone Permission Card
                 ThemedCard(style: .standard) {
                     VStack(alignment: .leading, spacing: 14) {

@@ -17,6 +17,8 @@
 		7CDB0A2F2F3C4D5600FB7CAD /* dictation_fixture.wav in Resources */ = {isa = PBXBuildFile; fileRef = 7CDB0A2B2F3C4D5600FB7CAD /* dictation_fixture.wav */; };
 		7CDB0A302F3C4D5600FB7CAD /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CDB0A2C2F3C4D5600FB7CAD /* XCTest.framework */; };
 		7CE006BD2E80EBE600DDCCD6 /* AppUpdater in Frameworks */ = {isa = PBXBuildFile; productRef = 7CE006BC2E80EBE600DDCCD6 /* AppUpdater */; };
+		7CF7A1A530AA000100F00001 /* Sources/Fluid/Resources/FV_start.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 7CF7A1A730AA000100F00001 /* Sources/Fluid/Resources/FV_start.m4a */; };
+		95A3C0E92F31D9AE00829BE2 /* Swifter in Frameworks */ = {isa = PBXBuildFile; productRef = 95A3C0E82F31D9AE00829BE2 /* Swifter */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -36,11 +38,26 @@
 		7CDB0A2A2F3C4D5600FB7CAD /* AudioFixtureLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioFixtureLoader.swift; sourceTree = "<group>"; };
 		7CDB0A2B2F3C4D5600FB7CAD /* dictation_fixture.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = dictation_fixture.wav; sourceTree = "<group>"; };
 		7CDB0A2C2F3C4D5600FB7CAD /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
+		7CF7A1A730AA000100F00001 /* Sources/Fluid/Resources/FV_start.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.m4a; path = Sources/Fluid/Resources/FV_start.m4a; sourceTree = "<group>"; };
+		7CF7A1A830AA000100F00001 /* Sources/Fluid/Resources/FV_start_2.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.m4a; path = Sources/Fluid/Resources/FV_start_2.m4a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		95A3C0EA2F31DB0000829BE2 /* Exceptions for "Sources/Fluid" folder in "fluid" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Resources/FV_start.m4a,
+			);
+			target = 7C078D8E2E3B339200FB7CAC /* fluid */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		7C078D912E3B339200FB7CAC /* Sources/Fluid */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				95A3C0EA2F31DB0000829BE2 /* Exceptions for "Sources/Fluid" folder in "fluid" target */,
+			);
 			path = Sources/Fluid;
 			sourceTree = "<group>";
 		};
@@ -51,6 +68,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				95A3C0E92F31D9AE00829BE2 /* Swifter in Frameworks */,
 				7C3697892ED70F9C005874CE /* DynamicNotchKit in Frameworks */,
 				7C5AF14B2F15041600DE21B0 /* MediaRemoteAdapter in Frameworks */,
 				7C3236542EAAD608007E4CB6 /* MCP in Frameworks */,
@@ -77,6 +95,7 @@
 				7C078D912E3B339200FB7CAC /* Sources/Fluid */,
 				7CDB0A242F3C4D5600FB7CAD /* Tests */,
 				7CDB0A282F3C4D5600FB7CAD /* Frameworks */,
+				95A3C0162F31D48400829BE2 /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -131,6 +150,15 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		95A3C0162F31D48400829BE2 /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				7CF7A1A730AA000100F00001 /* Sources/Fluid/Resources/FV_start.m4a */,
+				7CF7A1A830AA000100F00001 /* Sources/Fluid/Resources/FV_start_2.m4a */,
+			);
+			name = "Recovered References";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -157,6 +185,7 @@
 				7CE006BC2E80EBE600DDCCD6 /* AppUpdater */,
 				7C1C72F12EECBD1300E3BF4D /* SwiftWhisper */,
 				7C5AF14A2F15041600DE21B0 /* MediaRemoteAdapter */,
+				95A3C0E82F31D9AE00829BE2 /* Swifter */,
 			);
 			productName = FluidVoice;
 			productReference = 7C078D8F2E3B339200FB7CAC /* FluidVoice Debug.app */;
@@ -188,7 +217,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2600;
-				LastUpgradeCheck = 2600;
+				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					7C078D8E2E3B339200FB7CAC = {
 						CreatedOnToolsVersion = 26.0;
@@ -214,6 +243,9 @@
 				7C3697872ED70F9C005874CE /* XCRemoteSwiftPackageReference "DynamicNotchKit" */,
 				7C1C72F02EECBD1300E3BF4D /* XCRemoteSwiftPackageReference "SwiftWhisper" */,
 				7C5AF1492F15041600DE21B0 /* XCRemoteSwiftPackageReference "mediaremote-adapter" */,
+				95A3C0E52F31D77000829BE2 /* XCRemoteSwiftPackageReference "swift-algorithms" */,
+				95A3C0E62F31D7A300829BE2 /* XCRemoteSwiftPackageReference "swifter" */,
+				95A3C0E72F31D81400829BE2 /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 7C078D902E3B339200FB7CAC /* Products */;
@@ -231,6 +263,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7CF7A1A530AA000100F00001 /* Sources/Fluid/Resources/FV_start.m4a in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -307,6 +340,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = V4J43B279J;
 				ENABLE_CODE_COVERAGE = NO;
@@ -333,6 +367,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -373,6 +408,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = V4J43B279J;
 				ENABLE_CODE_COVERAGE = NO;
@@ -393,6 +429,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = NO;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 			};
 			name = Release;
@@ -403,13 +440,15 @@
 				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				AUTOMATION_APPLE_EVENTS = YES;
 				CODE_SIGN_ENTITLEMENTS = Fluid.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = V4J43B279J;
-				ENABLE_APP_SANDBOX = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 4JSY8RYCTF;
+				ENABLE_APP_SANDBOX = YES;
 				ENABLE_CODE_COVERAGE = NO;
 				ENABLE_FILE_ACCESS_DOWNLOADS_FOLDER = readwrite;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -440,6 +479,7 @@
 				PRODUCT_NAME = "FluidVoice Debug";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
+				RUNTIME_EXCEPTION_DISABLE_LIBRARY_VALIDATION = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ARCH_ARM64";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -457,13 +497,15 @@
 				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				AUTOMATION_APPLE_EVENTS = YES;
 				CODE_SIGN_ENTITLEMENTS = Fluid.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = V4J43B279J;
-				ENABLE_APP_SANDBOX = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 4JSY8RYCTF;
+				ENABLE_APP_SANDBOX = YES;
 				ENABLE_CODE_COVERAGE = NO;
 				ENABLE_FILE_ACCESS_DOWNLOADS_FOLDER = readwrite;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -494,6 +536,7 @@
 				PRODUCT_NAME = FluidVoice;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
+				RUNTIME_EXCEPTION_DISABLE_LIBRARY_VALIDATION = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ARCH_ARM64";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -514,7 +557,8 @@
 				CLANG_ENABLE_MODULES = YES;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = V4J43B279J;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 4JSY8RYCTF;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = FluidDictationIntegrationTests;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -539,7 +583,8 @@
 				CLANG_ENABLE_MODULES = YES;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = V4J43B279J;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 4JSY8RYCTF;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = FluidDictationIntegrationTests;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -623,8 +668,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/ejbills/mediaremote-adapter";
 			requirement = {
-				kind = branch;
 				branch = master;
+				kind = branch;
 			};
 		};
 		7CE006BB2E80EBE600DDCCD6 /* XCRemoteSwiftPackageReference "AppUpdater" */ = {
@@ -633,6 +678,30 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.1.1;
+			};
+		};
+		95A3C0E52F31D77000829BE2 /* XCRemoteSwiftPackageReference "swift-algorithms" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-algorithms.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.2.1;
+			};
+		};
+		95A3C0E62F31D7A300829BE2 /* XCRemoteSwiftPackageReference "swifter" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/httpswift/swifter.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.0;
+			};
+		};
+		95A3C0E72F31D81400829BE2 /* XCRemoteSwiftPackageReference "swift-argument-parser" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-argument-parser.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.7.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -667,6 +736,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7CE006BB2E80EBE600DDCCD6 /* XCRemoteSwiftPackageReference "AppUpdater" */;
 			productName = AppUpdater;
+		};
+		95A3C0E82F31D9AE00829BE2 /* Swifter */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 95A3C0E62F31D7A300829BE2 /* XCRemoteSwiftPackageReference "swifter" */;
+			productName = Swifter;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

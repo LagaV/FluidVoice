@@ -95,7 +95,8 @@ final class MeetingTranscriptionService: ObservableObject {
     /// Transcribe an audio or video file
     /// - Parameters:
     ///   - fileURL: URL to the audio/video file
-    func transcribeFile(_ fileURL: URL) async throws -> TranscriptionResult {
+    ///   - modelId: Optional specific model ID to use
+    func transcribeFile(_ fileURL: URL, modelId: String? = nil) async throws -> TranscriptionResult {
         self.isTranscribing = true
         error = nil
         self.progress = 0.0
@@ -107,15 +108,65 @@ final class MeetingTranscriptionService: ObservableObject {
         }
 
         do {
-            // Initialize models if not already done (reuses ASRService models)
-            if !self.asrService.isAsrReady {
-                try await self.initializeModels()
+            var selectedModel: SettingsStore.SpeechModel? = nil
+            
+            // Resolve specific model if requested
+            if let modelId = modelId {
+                if let model = SettingsStore.SpeechModel.availableModels.first(where: { $0.id == modelId }) {
+                    selectedModel = model
+                    DebugLogger.shared.info("Specific model requested: \(model.displayName) (ID: \(modelId))", source: "MeetingTranscriptionService")
+                } else {
+                    DebugLogger.shared.warning("Requested model '\(modelId)' not found/available. Falling back to default.", source: "MeetingTranscriptionService")
+                }
+            } else {
+                 DebugLogger.shared.info("No specific model requested, using default.", source: "MeetingTranscriptionService")
             }
 
-            // Get the current transcription provider (works for both Parakeet and Whisper)
-            let provider = self.asrService.fileTranscriptionProvider
+            // Determine effective provider
+            let provider: TranscriptionProvider
+            
+            if let model = selectedModel {
+                let globalId = SettingsStore.shared.selectedSpeechModel.id
+                DebugLogger.shared.info("[Debug] Request ID: '\(model.id)' vs Global ID: '\(globalId)'", source: "MeetingTranscriptionService")
+                
+                // OPTIMIZATION: Check if this model is ALREADY the active global model
+                // This avoids re-initializing the model (loading from disk) if it's already in memory
+                if model.id == globalId {
+                    DebugLogger.shared.info("✅ Requested model matches global. Reusing global provider (Fast Path).", source: "MeetingTranscriptionService")
+                    
+                    if !self.asrService.isAsrReady {
+                        try await self.initializeModels()
+                    }
+                    provider = self.asrService.fileTranscriptionProvider
+                } else {
+                    // Use specific provider - separate instance from the global one
+                    DebugLogger.shared.info("⚠️ Requested model differs from global. Creating new provider (Slow Path).", source: "MeetingTranscriptionService")
+                    provider = self.asrService.getProvider(for: model)
+                    
+                    // Ensure specific model is ready (loaded into memory)
+                    if !provider.isReady {
+                        self.currentStatus = "Loading \(model.displayName)..."
+                        DebugLogger.shared.info("Initializing specific provider implementation for \(model.displayName)...", source: "MeetingTranscriptionService")
+                        
+                        let prepStart = Date()
+                        // We must call prepare() to load the model, even if files exist on disk
+                        try await provider.prepare { [weak self] progress in
+                             self?.progress = progress
+                        }
+                        DebugLogger.shared.info("Provider preparation took \(Date().timeIntervalSince(prepStart))s", source: "MeetingTranscriptionService")
+                    }
+                }
+            } else {
+                DebugLogger.shared.info("ℹ️ No model specified. Using global default.", source: "MeetingTranscriptionService")
+                // Use default (global) provider
+                if !self.asrService.isAsrReady {
+                    try await self.initializeModels()
+                }
+                provider = self.asrService.fileTranscriptionProvider
+            }
+
             guard provider.isReady else {
-                throw TranscriptionError.modelLoadFailed("Transcription provider not ready")
+                throw TranscriptionError.modelLoadFailed("Transcription provider not ready after initialization")
             }
 
             // Check file extension

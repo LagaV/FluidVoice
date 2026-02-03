@@ -68,6 +68,35 @@ final class AppServices: ObservableObject {
         return service
     }
 
+    /// Meeting Transcription Service (lazily initialized)
+    private var _meetingTranscriptionService: MeetingTranscriptionService?
+    var meetingTranscriptionService: MeetingTranscriptionService {
+        if let existing = self._meetingTranscriptionService {
+            return existing
+        }
+        DebugLogger.shared.info("📝 Lazily creating MeetingTranscriptionService", source: "AppServices")
+        let service = MeetingTranscriptionService(asrService: self.asr)
+        self._meetingTranscriptionService = service
+        return service
+    }
+
+    /// Backlog manager for file transcription (lazily initialized)
+    var backlogManager: BacklogManager {
+        let manager = BacklogManager.shared
+        // Ensure it's configured with a transcription service (singleton configuration)
+        // We check if it's already configured inside, or just re-configure harmlessly
+        // efficiently we just pass our stable reference
+        manager.configure(with: self.meetingTranscriptionService)
+        return manager
+    }
+
+    /// API Service (lazily initialized)
+    var apiService: APIService {
+        let service = APIService.shared
+        service.initialize()
+        return service
+    }
+
     private var cancellables = Set<AnyCancellable>()
 
     private init() {
@@ -110,6 +139,8 @@ final class AppServices: ObservableObject {
         // Access the properties to trigger lazy initialization
         _ = self.audioObserver
         _ = self.asr
+        _ = self.backlogManager
+        _ = self.apiService
 
         DebugLogger.shared.info("✅ All services initialized", source: "AppServices")
     }

@@ -206,6 +206,8 @@ struct ContentView: View {
                 // Now it's safe to access services (they'll be lazily created)
                 self.audioObserver.startObserving()
                 self.asr.initialize()
+                _ = self.appServices.backlogManager // Trigger lazy initialization coverage
+                _ = self.appServices.apiService // Trigger lazy initialization and server start
 
                 // Configure menu bar manager with ASR service AFTER services are initialized
                 self.menuBarManager.configure(asrService: self.appServices.asr)

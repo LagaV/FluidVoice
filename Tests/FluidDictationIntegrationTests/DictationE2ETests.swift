@@ -31,6 +31,30 @@ final class DictationE2ETests: XCTestCase {
             "Expected transcription to contain 'voice' (or a close variant like 'boys'). Got: \(raw)"
         )
     }
+    
+    @MainActor
+    func testAPIService_startsAndResponds() async throws {
+        // Arrange
+        SettingsStore.shared.enableAPI = true
+        
+        let apiService = APIService.shared
+        apiService.initialize()
+        
+        // Wait briefly for server start
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5s
+        
+        // Act
+        let url = URL(string: "http://localhost:7086/models")!
+        let (data, response) = try await URLSession.shared.data(from: url)
+        
+        // Assert
+        let httpResponse = response as? HTTPURLResponse
+        XCTAssertEqual(httpResponse?.statusCode, 200, "Expected status code 200 from API")
+        
+        // Validate JSON content
+        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        XCTAssertNotNil(json?["models"], "Expected 'models' field in response")
+    }
 
     private static func modelDirectoryForRun() -> URL {
         // Use a stable path on CI so GitHub Actions cache can speed up runs.
