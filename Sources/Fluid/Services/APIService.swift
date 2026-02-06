@@ -385,7 +385,10 @@ final class APIService: ObservableObject {
 
             let models = self.runOnMain {
                 // Return available transcription models
-                SettingsStore.SpeechModel.availableModels\n                    .filter { $0.isInstalled }\n                    .map(\.id)\n                    .sorted()
+                SettingsStore.SpeechModel.availableModels
+                    .filter { $0.isInstalled }
+                    .map(\.id)
+                    .sorted()
             } ?? []
 
             return .ok(.json(["models": models]))
