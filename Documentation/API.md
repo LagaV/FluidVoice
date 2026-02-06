@@ -3,12 +3,16 @@
 The FluidVoice Local API allows you to submit audio files for transcription, check their status, and retrieve results programmatically. The API runs locally on port `7086` by default.
 
 ## Base URL
-`http://127.0.0.1:7086`\n\n> **Note**: The API binds strictly to **IPv4 loopback** (`127.0.0.1`). It is **not** accessible via `::1` (IPv6) or other network interfaces. For best compatibility, use `127.0.0.1` instead of `localhost`.\n\n> **Port**: The default port is `7086`, but this can be changed in the app settings (File Transcription API > Port).
+`http://127.0.0.1:7086`
+
+> **Note**: The API binds strictly to **IPv4 loopback** (`127.0.0.1`). It is **not** accessible via `::1` (IPv6) or other network interfaces. For best compatibility, use `127.0.0.1` instead of `localhost`.
+
+> **Port**: The default port is `7086`, but this can be changed in the app settings (File Transcription API > Port).
 
 ## Endpoints
 
 ### 1. List Available Models
-Retrieves a list of available transcription models.
+Retrieves a list of available transcription models that are **downloaded and ready to use**.
 
 - **Endpoint**: `GET /models`
 - **Response**: JSON object containing a list of model IDs.
