@@ -14,5 +14,9 @@
 	<array>
 		<string>com.apple.loginitems</string>
 	</array>
+	<key>com.apple.security.temporary-exception.files.absolute-path.read-only</key>
+	<array>
+		<string>/</string>
+	</array>
 </dict>
 </plist>

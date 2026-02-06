@@ -48,8 +48,9 @@ Checks the status of a transcription job.
 
 - **Endpoint**: `GET /status`
 - **Query Parameters**:
-    - `url` (string, required): The URL of the file.
-    - `model` (string, optional): The model ID used. Required only if multiple jobs exist for the same file.
+    - `id` (string, optional): The UUID of the job (RECOMMENDED). Takes precedence over `url`.
+    - `url` (string, optional): The URL of the file. Legacy/fallback if `id` is not provided.
+    - `model` (string, optional): The model ID used. Required only if using `url` and multiple jobs exist for the same file.
 
 - **Response**:
     - `200 OK`: Returns job details.
@@ -86,8 +87,9 @@ Retrieves the transcribed text.
 
 - **Endpoint**: `GET /result`
 - **Query Parameters**:
-    - `url` (string, required): The URL of the file.
-    - `model` (string, optional): The model ID used. Required if ambiguous.
+    - `id` (string, optional): The UUID of the job (RECOMMENDED).
+    - `url` (string, optional): The URL of the file.
+    - `model` (string, optional): The model ID used. Required if using `url` and ambiguous.
     - `format` (string, optional): Output format. `text` (default) or `vtt`.
 
 - **Response**:
@@ -124,8 +126,9 @@ Removes a job from the backlog.
 
 - **Endpoint**: `DELETE /backlog`
 - **Query Parameters**:
-    - `url` (string, required): The URL of the file.
-    - `model` (string, optional): The model ID to delete. Required if ambiguous.
+    - `id` (string, optional): The UUID of the job to delete (RECOMMENDED).
+    - `url` (string, optional): The URL of the file.
+    - `model` (string, optional): The model ID to delete. Required if using `url` and ambiguous.
 
 - **Response**:
     - `200 OK`: Deleted.

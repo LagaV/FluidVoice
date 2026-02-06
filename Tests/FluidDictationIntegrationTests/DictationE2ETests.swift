@@ -56,6 +56,66 @@ final class DictationE2ETests: XCTestCase {
         XCTAssertNotNil(json?["models"], "Expected 'models' field in response")
     }
 
+    @MainActor
+    func testAPIService_idBasedOperations() async throws {
+        // Arrange
+        SettingsStore.shared.enableAPI = true
+        let apiService = APIService.shared
+        apiService.initialize(port: 7089)
+
+        // Wait briefly for server start
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        // create a dummy job in BacklogManager
+        let dummyURL = URL(fileURLWithPath: "/tmp/test_audio.mp3")
+        
+        // Manually inject a job into BacklogManager (since it's a singleton, we can modify it directly if it exposes properties, otherwise we use addJob)
+        // BacklogManager.shared.addJob checks for duplicates by URL+Model.
+        // We can't force an ID via addJob easily without changing BacklogManager internals or init.
+        // However, we can use addJob and then find the ID.
+        
+        BacklogManager.shared.addJob(url: dummyURL, modelId: "whisperTiny")
+        
+        // Give it a moment to persist/update
+        try await Task.sleep(nanoseconds: 100_000_000)
+        
+        guard let job = BacklogManager.shared.getJobs(for: dummyURL).first(where: { $0.modelId == "whisperTiny" }) else {
+            XCTFail("Failed to add dummy job")
+            return
+        }
+        let jobID = job.id
+        
+        // Act & Assert 1: Get Status by ID
+        let statusURL = URL(string: "http://localhost:7089/status?id=\(jobID)")!
+        let (statusData, statusResponse) = try await URLSession.shared.data(from: statusURL)
+        XCTAssertEqual((statusResponse as? HTTPURLResponse)?.statusCode, 200)
+        
+        let statusJSON = try JSONSerialization.jsonObject(with: statusData) as? [String: Any]
+        XCTAssertEqual(statusJSON?["id"] as? String, jobID)
+        let status = statusJSON?["status"] as? String
+        XCTAssertTrue(status == "pending" || status == "processing", "Status was \(String(describing: status))")
+        
+        // Act & Assert 2: Get Result by ID (should fail as not completed)
+        let resultURL = URL(string: "http://localhost:7089/result?id=\(jobID)")!
+        var request = URLRequest(url: resultURL)
+        request.httpMethod = "GET"
+        let (_, resultResponse) = try await URLSession.shared.data(for: request)
+        // Should be 400 Bad Request because job is not completed
+        XCTAssertEqual((resultResponse as? HTTPURLResponse)?.statusCode, 400)
+        
+        // Act & Assert 3: Delete by ID
+        let deleteURL = URL(string: "http://localhost:7089/backlog?id=\(jobID)")!
+        var deleteRequest = URLRequest(url: deleteURL)
+        deleteRequest.httpMethod = "DELETE"
+        let (_, deleteResponse) = try await URLSession.shared.data(for: deleteRequest)
+        XCTAssertEqual((deleteResponse as? HTTPURLResponse)?.statusCode, 200)
+        
+        // Verify Deletion
+        let (_, verifyResponse) = try await URLSession.shared.data(from: statusURL)
+        // Should be 404 Not Found
+        XCTAssertEqual((verifyResponse as? HTTPURLResponse)?.statusCode, 404)
+    }
+
     private static func modelDirectoryForRun() -> URL {
         // Use a stable path on CI so GitHub Actions cache can speed up runs.
         if ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] == "true" ||

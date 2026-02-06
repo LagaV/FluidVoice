@@ -165,7 +165,12 @@ final class BacklogManager: ObservableObject {
             if job.fileURL.scheme?.lowercased() == "http" || job.fileURL.scheme?.lowercased() == "https" {
                 DebugLogger.shared.info("Downloading remote file: \(job.fileURL)", source: "BacklogManager")
                 do {
-                    let (tempURL, _) = try await URLSession.shared.download(from: job.fileURL)
+                    let (tempURL, response) = try await URLSession.shared.download(from: job.fileURL)
+                    
+                    if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
+                        throw NSError(domain: "BacklogManager", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "HTTP Download failed with status code: \(httpResponse.statusCode)"])
+                    }
+                    
                     let ext = job.fileURL.pathExtension.isEmpty ? "mp3" : job.fileURL.pathExtension
                     let destURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension(ext)
                     try FileManager.default.moveItem(at: tempURL, to: destURL)
@@ -212,7 +217,7 @@ final class BacklogManager: ObservableObject {
                 // Track timing
                 let startTime = Date()
                 // Use the modelId from the job if present, otherwise nil (defaulting to global)
-                let result = try await service.transcribeFile(job.fileURL, modelId: job.modelId)
+                let result = try await service.transcribeFile(fileToTranscribe, modelId: job.modelId)
                 let endTime = Date()
                 let duration = endTime.timeIntervalSince(startTime)
                 
