@@ -408,6 +408,29 @@ struct SettingsView: View {
                                     .textFieldStyle(.roundedBorder)
                                     .frame(width: 80)
                                 }
+
+                                Divider().opacity(0.2)
+
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Port")
+                                            .font(.body)
+                                        Text("Listening port (default: 7086). Requires restart.")
+                                            .font(.subheadline)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    Spacer()
+                                    TextField(
+                                        "Port",
+                                        value: Binding(
+                                            get: { SettingsStore.shared.apiPort },
+                                            set: { SettingsStore.shared.apiPort = $0 }
+                                        ),
+                                        formatter: NumberFormatter()
+                                    )
+                                    .textFieldStyle(.roundedBorder)
+                                    .frame(width: 80)
+                                }
                             }
                         }
                     }

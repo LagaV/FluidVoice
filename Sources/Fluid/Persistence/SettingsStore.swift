@@ -89,6 +89,7 @@ final class SettingsStore: ObservableObject {
 
         // API Settings
         static let enableAPI = "EnableAPI"
+        static let apiPort = "APIPort"
         static let apiBacklogLimit = "APIBacklogLimit"
 
         // GAAV Mode (removes capitalization and trailing punctuation)
@@ -763,6 +764,19 @@ final class SettingsStore: ObservableObject {
             objectWillChange.send()
             self.defaults.set(newValue, forKey: Keys.enableAPI)
             // Post notification for APIService to observe
+            NotificationCenter.default.post(name: NSNotification.Name("EnableAPIChanged"), object: nil)
+        }
+    }
+
+    var apiPort: UInt16 {
+        get {
+            let value = self.defaults.integer(forKey: Keys.apiPort)
+            return value == 0 ? 7086 : UInt16(value)
+        }
+        set {
+            objectWillChange.send()
+            self.defaults.set(newValue, forKey: Keys.apiPort)
+            // Post notification for APIService to observe (port change requires restart)
             NotificationCenter.default.post(name: NSNotification.Name("EnableAPIChanged"), object: nil)
         }
     }

@@ -60,8 +60,8 @@ final class APIService: ObservableObject {
         }
     }
 
-    func initialize(port: UInt16 = 7086) {
-        self.port = port
+    func initialize() {
+        self.port = SettingsStore.shared.apiPort
         if SettingsStore.shared.enableAPI {
             self.start()
         }
@@ -70,9 +70,10 @@ final class APIService: ObservableObject {
     private func start() {
         guard !self.isStarted else { return }
         do {
-            try self.server.start(self.port)
+            self.server.listenAddressIPv4 = "127.0.0.1"
+            try self.server.start(self.port, forceIPv4: true)
             self.isStarted = true
-            DebugLogger.shared.info("APIService started on port \(self.port)", source: "APIService")
+            DebugLogger.shared.info("APIService started on 127.0.0.1:\(self.port)", source: "APIService")
         } catch {
             DebugLogger.shared.error("Failed to start APIService: \(error)", source: "APIService")
         }
