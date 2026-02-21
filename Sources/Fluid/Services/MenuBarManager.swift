@@ -108,13 +108,22 @@ final class MenuBarManager: ObservableObject {
     }
 
     private func handleOverlayState(isRunning: Bool, asrService: ASRService) {
+        // Don't show overlay if suppressed (e.g. during Live Transcription)
+        if asrService.suppressNotchOverlay {
+            if self.overlayVisible {
+                NotchOverlayManager.shared.hide()
+                self.overlayVisible = false
+            }
+            return
+        }
+        
         // Don't hide the overlay while AI processing is active.
         // Without this, the notch can disappear during the short "Refining..." phase because
         // `isRunning` becomes false before post-processing completes.
         if !isRunning, self.isProcessingActive {
             return
         }
-
+        
         // Prevent rapid state changes that could cause cycles
         guard self.overlayVisible != isRunning else { return }
 
