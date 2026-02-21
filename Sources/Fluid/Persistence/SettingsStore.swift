@@ -130,9 +130,9 @@ final class SettingsStore: ObservableObject {
         static let defaultWritePromptOverride = "DefaultWritePromptOverride" // legacy fallback key
         static let defaultRewritePromptOverride = "DefaultRewritePromptOverride" // legacy fallback key
 
-        // Streak Settings
+        /// Streak Settings
         static let weekendsDontBreakStreak = "WeekendsDontBreakStreak"
-        
+
         // Live Transcription Keys
         static let liveTranscriptionStoragePath = "LiveTranscriptionStoragePath"
         static let liveTranscriptionAutoSave = "LiveTranscriptionAutoSave"
@@ -1608,9 +1608,9 @@ final class SettingsStore: ObservableObject {
             self.defaults.set(newValue, forKey: Keys.saveTranscriptionHistory)
         }
     }
-    
+
     // MARK: - Live Transcription Settings
-    
+
     /// Storage path for live transcription sessions
     var liveTranscriptionStoragePath: String {
         get {
@@ -1626,7 +1626,7 @@ final class SettingsStore: ObservableObject {
             self.defaults.set(newValue, forKey: Keys.liveTranscriptionStoragePath)
         }
     }
-    
+
     /// Whether to auto-save sessions to file when completed
     var liveTranscriptionAutoSave: Bool {
         get {
@@ -1638,7 +1638,7 @@ final class SettingsStore: ObservableObject {
             self.defaults.set(newValue, forKey: Keys.liveTranscriptionAutoSave)
         }
     }
-    
+
     /// Interval in seconds for processing transcription segments
     var liveTranscriptionSegmentInterval: Double {
         get {

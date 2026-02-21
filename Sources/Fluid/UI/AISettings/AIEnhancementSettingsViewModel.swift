@@ -565,19 +565,17 @@ final class AIEnhancementSettingsViewModel: ObservableObject {
 
         // Build the endpoint URL
         let endpoint = baseURL.trimmingCharacters(in: .whitespacesAndNewlines)
-        let fullURL: String
-
-        if isAnthropic {
+        let fullURL: String = if isAnthropic {
             // Anthropic uses /messages endpoint, not /chat/completions
             if endpoint.contains("/messages") {
-                fullURL = endpoint
+                endpoint
             } else {
-                fullURL = endpoint + "/messages"
+                endpoint + "/messages"
             }
         } else if endpoint.contains("/chat/completions") || endpoint.contains("/api/chat") || endpoint.contains("/api/generate") {
-            fullURL = endpoint
+            endpoint
         } else {
-            fullURL = endpoint + "/chat/completions"
+            endpoint + "/chat/completions"
         }
 
         // Debug logging

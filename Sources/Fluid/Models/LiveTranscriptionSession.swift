@@ -19,19 +19,19 @@ struct LiveTranscriptionSession: Codable, Identifiable, Equatable {
     var customMetadata: [String: String]
     var isPaused: Bool
     var pauseIntervals: [PauseInterval]
-    var segments: [TimedSegment]  // NEW: Store segments with timing
-    
+    var segments: [TimedSegment] // NEW: Store segments with timing
+
     struct PauseInterval: Codable, Equatable {
         let start: Date
         var end: Date?
     }
-    
+
     struct TimedSegment: Codable, Equatable {
         let text: String
         let startTime: Date
         let endTime: Date
     }
-    
+
     init(
         id: UUID = UUID(),
         startTime: Date = Date(),
@@ -55,40 +55,40 @@ struct LiveTranscriptionSession: Codable, Identifiable, Equatable {
         self.pauseIntervals = pauseIntervals
         self.segments = segments
     }
-    
+
     // MARK: - Computed Properties
-    
+
     /// Total duration in seconds
     var duration: TimeInterval {
         let end = self.endTime ?? Date()
         var totalDuration = end.timeIntervalSince(self.startTime)
-        
+
         // Subtract pause durations
         for interval in self.pauseIntervals {
             let pauseEnd = interval.end ?? Date()
             totalDuration -= pauseEnd.timeIntervalSince(interval.start)
         }
-        
+
         return max(0, totalDuration)
     }
-    
+
     /// Word count
     var wordCount: Int {
         let trimmed = self.transcribedText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return 0 }
-        
+
         let words = trimmed.components(separatedBy: .whitespacesAndNewlines)
             .filter { !$0.isEmpty }
         return words.count
     }
-    
+
     /// Formatted duration string (e.g., "1h 23m 45s" or "2m 30s")
     var formattedDuration: String {
         let seconds = Int(self.duration)
         let hours = seconds / 3600
         let minutes = (seconds % 3600) / 60
         let secs = seconds % 60
-        
+
         if hours > 0 {
             return "\(hours)h \(minutes)m \(secs)s"
         } else if minutes > 0 {
@@ -97,7 +97,7 @@ struct LiveTranscriptionSession: Codable, Identifiable, Equatable {
             return "\(secs)s"
         }
     }
-    
+
     /// Formatted start time
     var formattedStartTime: String {
         let formatter = DateFormatter()
@@ -105,7 +105,7 @@ struct LiveTranscriptionSession: Codable, Identifiable, Equatable {
         formatter.timeStyle = .short
         return formatter.string(from: self.startTime)
     }
-    
+
     /// Formatted end time (if available)
     var formattedEndTime: String? {
         guard let endTime else { return nil }
@@ -114,7 +114,7 @@ struct LiveTranscriptionSession: Codable, Identifiable, Equatable {
         formatter.timeStyle = .short
         return formatter.string(from: endTime)
     }
-    
+
     /// Preview text for list display (first 100 chars)
     var previewText: String {
         let text = self.transcribedText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -123,77 +123,77 @@ struct LiveTranscriptionSession: Codable, Identifiable, Equatable {
         }
         return text.isEmpty ? "(No content)" : text
     }
-    
+
     /// Relative time string for display
     var relativeTimeString: String {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
         return formatter.localizedString(for: self.startTime, relativeTo: Date())
     }
-    
+
     /// Check if session is currently active
     var isActive: Bool {
         self.endTime == nil
     }
-    
+
     // MARK: - Markdown Export
-    
+
     /// Generate markdown content with YAML frontmatter
     func toMarkdown() -> String {
         // Use custom title if available, otherwise use formatted start time
         let title = self.customMetadata["title"] ?? self.formattedStartTime
-        
+
         var frontmatter = """
         ---
         id: \(self.id.uuidString)
         title: "\(title)"
         start_time: "\(ISO8601DateFormatter().string(from: self.startTime))"
         """
-        
+
         if let endTime {
             frontmatter += "\nend_time: \"\(ISO8601DateFormatter().string(from: endTime))\""
         }
-        
+
         frontmatter += """
-        
+
         duration: \(Int(self.duration))
         word_count: \(self.wordCount)
         app_name: "\(self.appName)"
         device_info: "\(self.deviceInfo)"
         """
-        
+
         // Add custom metadata
         for (key, value) in self.customMetadata.sorted(by: { $0.key < $1.key }) {
             frontmatter += "\n\(key): \"\(value)\""
         }
-        
+
         frontmatter += "\n---\n\n"
-        
+
         return frontmatter + self.transcribedText
     }
-    
+
     /// Parse markdown file with frontmatter
     static func fromMarkdown(_ content: String) -> LiveTranscriptionSession? {
         // Split frontmatter and content
         let components = content.components(separatedBy: "---")
         guard components.count >= 3 else { return nil }
-        
+
         let frontmatterString = components[1].trimmingCharacters(in: .whitespacesAndNewlines)
         let textContent = components[2...].joined(separator: "---").trimmingCharacters(in: .whitespacesAndNewlines)
-        
+
         // Parse frontmatter
         var metadata: [String: String] = [:]
         for line in frontmatterString.components(separatedBy: .newlines) {
             let parts = line.split(separator: ":", maxSplits: 1)
             guard parts.count == 2 else { continue }
-            
+
             let key = parts[0].trimmingCharacters(in: .whitespaces)
             let value = parts[1].trimmingCharacters(in: .whitespaces)
                 .trimmingCharacters(in: CharacterSet(charactersIn: "\""))
-            
+
             metadata[key] = value
         }
-        
+
         // Extract required fields
         guard let idString = metadata["id"],
               let id = UUID(uuidString: idString),
@@ -202,18 +202,18 @@ struct LiveTranscriptionSession: Codable, Identifiable, Equatable {
         else {
             return nil
         }
-        
+
         let endTime = metadata["end_time"].flatMap { ISO8601DateFormatter().date(from: $0) }
         let appName = metadata["app_name"] ?? "FluidVoice"
         let deviceInfo = metadata["device_info"] ?? ""
-        
+
         // Extract custom metadata (exclude known fields)
         let knownKeys = Set(["id", "title", "start_time", "end_time", "duration", "word_count", "app_name", "device_info"])
         var customMetadata: [String: String] = [:]
         for (key, value) in metadata where !knownKeys.contains(key) {
             customMetadata[key] = value
         }
-        
+
         return LiveTranscriptionSession(
             id: id,
             startTime: startTime,

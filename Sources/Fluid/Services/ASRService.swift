@@ -104,16 +104,16 @@ final class ASRService: ObservableObject {
     @Published var wordBoostStatusText: String = "Word boost: off"
     @Published var micStatus: AVAuthorizationStatus = .notDetermined
     @Published var isAsrReady: Bool = false
-    @Published var suppressNotchOverlay: Bool = false  // Used by Live Transcription to hide notch
+    @Published var suppressNotchOverlay: Bool = false // Used by Live Transcription to hide notch
     @Published var isDownloadingModel: Bool = false
     @Published var isLoadingModel: Bool = false // True when loading cached model into memory (not downloading)
     @Published var modelsExistOnDisk: Bool = false
     @Published var downloadProgress: Double? = nil
     @Published var downloadingModelId: String? = nil // Tracks which model is currently being downloaded
-    
+
     // Live Transcription state tracking (set by LiveTranscriptionService)
-    @Published var isLiveTranscriptionActive: Bool = false  // True when Live Transcription is active (including paused)
-    @Published var isLiveTranscriptionRecording: Bool = false  // True only when actively recording (not paused)
+    @Published var isLiveTranscriptionActive: Bool = false // True when Live Transcription is active (including paused)
+    @Published var isLiveTranscriptionRecording: Bool = false // True only when actively recording (not paused)
 
     private var isStarting: Bool = false // Guard against re-entrant start() calls
     private var downloadProgressTask: Task<Void, Never>?
@@ -1610,7 +1610,7 @@ final class ASRService: ObservableObject {
                 guard let self else { return }
                 let cachedUIDs = self.cachedDeviceUIDs
 
-                DebugLogger.shared.debug("Current input devices: \(currentDevices.map { $0.name }.joined(separator: ", "))", source: "ASRService")
+                DebugLogger.shared.debug("Current input devices: \(currentDevices.map(\.name).joined(separator: ", "))", source: "ASRService")
 
                 // Check if preferred device is now available (for auto-switch)
                 if let preferredUID,

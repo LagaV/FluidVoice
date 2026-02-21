@@ -13,7 +13,7 @@ struct LiveTranscriptionView: View {
     @ObservedObject private var store = LiveTranscriptionStore.shared
     @ObservedObject private var settings = SettingsStore.shared
     @Environment(\.theme) private var theme
-    
+
     @State private var editableText: String = ""
     @State private var transcriptionTitle: String = ""
     @State private var customMetadata: [String: String] = [:]
@@ -23,12 +23,13 @@ struct LiveTranscriptionView: View {
     @State private var showingClearConfirmation = false
     @State private var showingExportDialog = false
     @State private var exportFormat: ExportFormat = .plainText
-    
+
     enum ExportFormat {
         case plainText
         case withTimestamps
         case htmlSpans
     }
+
     @State private var showingDeleteConfirmation: UUID?
     @State private var searchQuery: String = ""
     @State private var showTimestamps: Bool = false
@@ -36,34 +37,33 @@ struct LiveTranscriptionView: View {
     @State private var showArchivesSheet: Bool = false
     @State private var showLoadConfirmation: Bool = false
     @State private var sessionToLoad: LiveTranscriptionSession?
-    @State private var isSyncingFromService: Bool = false  // Track ASR updates vs user edits
+    @State private var isSyncingFromService: Bool = false // Track ASR updates vs user edits
     @FocusState private var isEditorFocused: Bool
-    
+
     init(asrService: ASRService) {
         _service = StateObject(wrappedValue: LiveTranscriptionService(asrService: asrService))
     }
-    
+
     var body: some View {
         VStack(spacing: 0) {
             // Header
             self.headerView
                 .padding()
                 .background(self.theme.palette.windowBackground)
-            
+
             Divider()
-            
+
             // Main content
             ScrollView {
                 VStack(spacing: 20) {
                     // Metadata Panel
                     self.metadataPanel
-                    
+
                     // Editor Section
                     self.editorSection
-                    
+
                     // Control Buttons
                     self.controlButtons
-                    
                 }
                 .padding(24)
             }
@@ -104,7 +104,7 @@ struct LiveTranscriptionView: View {
         .onAppear {
             // Restore any backed-up session
             self.restoreSessionIfNeeded()
-            
+
             // Initialize title if empty
             if self.transcriptionTitle.isEmpty {
                 self.transcriptionTitle = self.generateDefaultTitle()
@@ -119,7 +119,7 @@ struct LiveTranscriptionView: View {
                 }
             }
         }
-        .onChange(of: self.service.completedText) { _, newText in
+        .onChange(of: self.service.completedText) { _, _ in
             // Smart sync: allow ASR text to flow in while preserving user edits
             self.updateEditableText(forceUpdate: false)
         }
@@ -133,16 +133,16 @@ struct LiveTranscriptionView: View {
             }
         }
     }
-    
+
     // MARK: - Header
-    
+
     private var headerView: some View {
         HStack {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Live Transcription")
                     .font(.title2)
                     .fontWeight(.bold)
-                
+
                 // Editable title field
                 TextField("Transcription title...", text: self.$transcriptionTitle)
                     .textFieldStyle(.plain)
@@ -151,13 +151,13 @@ struct LiveTranscriptionView: View {
                     .onChange(of: self.transcriptionTitle) { _, newValue in
                         self.service.addMetadata(key: "title", value: newValue)
                     }
-                
+
                 HStack(spacing: 6) {
                     if self.service.isRecording {
                         Circle()
                             .fill(self.service.isPaused ? Color.orange : Color.red)
                             .frame(width: 8, height: 8)
-                        
+
                         Text(self.service.isPaused ? "Paused" : "Recording")
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -166,34 +166,34 @@ struct LiveTranscriptionView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
-                    
+
                     // Always show word count and duration after status
                     if self.service.isRecording || self.service.currentWordCount > 0 {
                         Text("•")
                             .foregroundStyle(.secondary)
-                        
+
                         if self.service.isRecording {
                             Text(self.formatDuration(self.service.elapsedDuration))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                            
+
                             Text("•")
                                 .foregroundStyle(.secondary)
                         }
-                        
+
                         Text("\(self.service.currentWordCount) words")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                 }
             }
-            
+
             Spacer()
         }
     }
-    
+
     // MARK: - Metadata Panel
-    
+
     private var metadataPanel: some View {
         VStack(alignment: .leading, spacing: 16) {
             Button(action: {
@@ -205,87 +205,87 @@ struct LiveTranscriptionView: View {
                     Text("Session Information")
                         .font(.headline)
                         .foregroundStyle(.primary)
-                    
+
                     Spacer()
-                    
+
                     Image(systemName: self.showSessionInfo ? "chevron.up" : "chevron.down")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
             .buttonStyle(.plain)
-            
+
             if self.showSessionInfo {
                 VStack(spacing: 12) {
-                // Session Status
-                self.metadataRow(
-                    label: "Status",
-                    value: self.service.isRecording ? (self.service.isPaused ? "Paused" : "Recording") : "Idle"
-                )
-                
-                // Start Time
-                if let startTime = self.service.sessionStartTime {
+                    // Session Status
                     self.metadataRow(
-                        label: "Start Time",
-                        value: self.formatDateTime(startTime)
+                        label: "Status",
+                        value: self.service.isRecording ? (self.service.isPaused ? "Paused" : "Recording") : "Idle"
                     )
-                }
-                
-                // Duration
-                if self.service.isRecording {
-                    self.metadataRow(
-                        label: "Duration",
-                        value: self.formatDuration(self.service.elapsedDuration)
-                    )
-                }
-                
-                // Word Count
-                self.metadataRow(
-                    label: "Word Count",
-                    value: "\(self.service.currentWordCount)"
-                )
-                
-                // Device Info
-                if let session = self.store.currentSession {
-                    self.metadataRow(
-                        label: "Microphone",
-                        value: session.deviceInfo
-                    )
-                }
-                
-                Divider()
-                
-                // Custom Metadata
-                if !self.customMetadata.isEmpty {
-                    ForEach(Array(self.customMetadata.keys.sorted()), id: \.self) { key in
-                        HStack {
-                            self.metadataRow(
-                                label: key,
-                                value: self.customMetadata[key] ?? ""
-                            )
-                            
-                            Button(action: {
-                                self.removeCustomMetadata(key: key)
-                            }) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundStyle(.secondary)
-                            }
-                            .buttonStyle(.plain)
-                        }
+
+                    // Start Time
+                    if let startTime = self.service.sessionStartTime {
+                        self.metadataRow(
+                            label: "Start Time",
+                            value: self.formatDateTime(startTime)
+                        )
                     }
-                    
+
+                    // Duration
+                    if self.service.isRecording {
+                        self.metadataRow(
+                            label: "Duration",
+                            value: self.formatDuration(self.service.elapsedDuration)
+                        )
+                    }
+
+                    // Word Count
+                    self.metadataRow(
+                        label: "Word Count",
+                        value: "\(self.service.currentWordCount)"
+                    )
+
+                    // Device Info
+                    if let session = self.store.currentSession {
+                        self.metadataRow(
+                            label: "Microphone",
+                            value: session.deviceInfo
+                        )
+                    }
+
                     Divider()
-                }
-                
-                // Add Custom Metadata Button
-                Button(action: {
-                    self.showingNewMetadataDialog = true
-                }) {
-                    Label("Add Custom Field", systemImage: "plus.circle")
-                        .font(.caption)
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(self.theme.palette.accent)
+
+                    // Custom Metadata
+                    if !self.customMetadata.isEmpty {
+                        ForEach(Array(self.customMetadata.keys.sorted()), id: \.self) { key in
+                            HStack {
+                                self.metadataRow(
+                                    label: key,
+                                    value: self.customMetadata[key] ?? ""
+                                )
+
+                                Button(action: {
+                                    self.removeCustomMetadata(key: key)
+                                }) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundStyle(.secondary)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+
+                        Divider()
+                    }
+
+                    // Add Custom Metadata Button
+                    Button(action: {
+                        self.showingNewMetadataDialog = true
+                    }) {
+                        Label("Add Custom Field", systemImage: "plus.circle")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(self.theme.palette.accent)
                 }
                 .padding()
                 .background(
@@ -307,33 +307,33 @@ struct LiveTranscriptionView: View {
             self.newMetadataDialog
         }
     }
-    
+
     private func metadataRow(label: String, value: String) -> some View {
         HStack {
             Text(label)
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .frame(width: 100, alignment: .leading)
-            
+
             Text(value)
                 .font(.caption)
                 .fontWeight(.medium)
-            
+
             Spacer()
         }
     }
-    
+
     private var newMetadataDialog: some View {
         VStack(spacing: 20) {
             Text("Add Custom Field")
                 .font(.headline)
-            
+
             TextField("Field Name", text: self.$newMetadataKey)
                 .textFieldStyle(.roundedBorder)
-            
+
             TextField("Value", text: self.$newMetadataValue)
                 .textFieldStyle(.roundedBorder)
-            
+
             HStack {
                 Button("Cancel") {
                     self.showingNewMetadataDialog = false
@@ -341,9 +341,9 @@ struct LiveTranscriptionView: View {
                     self.newMetadataValue = ""
                 }
                 .keyboardShortcut(.escape)
-                
+
                 Spacer()
-                
+
                 Button("Add") {
                     self.addCustomMetadata()
                 }
@@ -354,9 +354,9 @@ struct LiveTranscriptionView: View {
         .padding()
         .frame(width: 350)
     }
-    
+
     // MARK: - Editor Section
-    
+
     private var editorSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Completed Text (Editable)
@@ -364,9 +364,9 @@ struct LiveTranscriptionView: View {
                 HStack {
                     Text("Completed Transcription")
                         .font(.headline)
-                    
+
                     Spacer()
-                    
+
                     // Jump to Live button
                     Button(action: {
                         // Exit edit mode: unfocus editor (triggers scroll to bottom)
@@ -381,7 +381,7 @@ struct LiveTranscriptionView: View {
                     .buttonStyle(.bordered)
                     .disabled(!self.service.isRecording || self.service.isPaused)
                     .help("Exit edit mode and jump to live transcription")
-                    
+
                     // Copy button
                     Button(action: {
                         NSPasteboard.general.clearContents()
@@ -396,7 +396,7 @@ struct LiveTranscriptionView: View {
                     .buttonStyle(.bordered)
                     .disabled(self.editableText.isEmpty)
                     .help("Copy transcription to clipboard")
-                    
+
                     // Timestamp toggle
                     Toggle(isOn: self.$showTimestamps) {
                         HStack(spacing: 4) {
@@ -407,12 +407,12 @@ struct LiveTranscriptionView: View {
                     }
                     .toggleStyle(.button)
                     .buttonStyle(.bordered)
-                    
+
                     Text("✏️ Editable")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
-                
+
                 ScrollViewReader { proxy in
                     // Single text editor with inline timestamps
                     ScrollView {
@@ -430,12 +430,12 @@ struct LiveTranscriptionView: View {
                                         self.service.updateCompletedText(newValue)
                                     }
                                 }
-                            
+
                             // Invisible anchor at the bottom for scrolling
                             Color.clear
                                 .frame(height: 1)
                                 .id("editor-bottom")
-                            
+
                             // Padding at bottom so text isn't cut off at edge
                             Spacer()
                                 .frame(height: 80)
@@ -449,7 +449,7 @@ struct LiveTranscriptionView: View {
                     )
                     .onChange(of: self.service.transcriptionSegments) { _, segments in
                         // Auto-scroll when editor not focused
-                        if !self.isEditorFocused && !segments.isEmpty {
+                        if !self.isEditorFocused, !segments.isEmpty {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                                 withAnimation(.easeOut(duration: 0.2)) {
                                     proxy.scrollTo("editor-bottom", anchor: .bottom)
@@ -469,16 +469,16 @@ struct LiveTranscriptionView: View {
                     }
                 }
             }
-            
+
             // Live Segment (Read-only, 1-2 lines)
-            if self.service.isRecording && !self.service.isPaused {
+            if self.service.isRecording, !self.service.isPaused {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Text("Currently Transcribing")
                             .font(.headline)
-                        
+
                         Spacer()
-                        
+
                         HStack(spacing: 4) {
                             Circle()
                                 .fill(Color.red)
@@ -488,7 +488,7 @@ struct LiveTranscriptionView: View {
                                 .foregroundStyle(.red)
                         }
                     }
-                    
+
                     // Read-only live text (1-2 lines)
                     Text(self.service.liveSegment.isEmpty ? "Listening..." : self.service.liveSegment)
                         .font(.system(size: 18))
@@ -507,9 +507,9 @@ struct LiveTranscriptionView: View {
             }
         }
     }
-    
+
     // MARK: - Control Buttons
-    
+
     private var controlButtons: some View {
         HStack(spacing: 12) {
             // Transcribe Toggle Button (simplified play/pause)
@@ -536,7 +536,7 @@ struct LiveTranscriptionView: View {
             .buttonStyle(.borderedProminent)
             .tint(self.service.isRecording && !self.service.isPaused ? Color.orange : Color.green)
             .keyboardShortcut("r", modifiers: [.command, .shift])
-            
+
             // Archive & Clear Button (stops current, saves to archives, starts fresh)
             Button(action: {
                 Task {
@@ -556,7 +556,7 @@ struct LiveTranscriptionView: View {
             }
             .buttonStyle(.bordered)
             .help("Archive current session and start a new blank session")
-            
+
             // Clear Button (without archiving)
             Button(action: {
                 self.showingClearConfirmation = true
@@ -584,7 +584,7 @@ struct LiveTranscriptionView: View {
                 }
                 Button("Cancel", role: .cancel) {}
             }
-            
+
             // Archives Button (opens sheet)
             Button(action: {
                 self.showArchivesSheet = true
@@ -594,7 +594,7 @@ struct LiveTranscriptionView: View {
             }
             .buttonStyle(.bordered)
             .help("View archived recordings")
-            
+
             // Export Button
             Menu {
                 Button("Plain Text") {
@@ -627,18 +627,18 @@ struct LiveTranscriptionView: View {
                 defaultFilename: self.generateFilename()
             ) { result in
                 switch result {
-                case .success(let url):
+                case let .success(url):
                     DebugLogger.shared.info("Exported session to: \(url.path)", source: "LiveTranscriptionView")
                     AnalyticsService.shared.capture(.liveTranscriptionSaved)
-                case .failure(let error):
+                case let .failure(error):
                     DebugLogger.shared.error("Failed to export session: \(error)", source: "LiveTranscriptionView")
                 }
             }
         }
     }
-    
+
     // MARK: - Archives Sheet
-    
+
     private var archivesSheetView: some View {
         NavigationStack {
             VStack {
@@ -666,43 +666,43 @@ struct LiveTranscriptionView: View {
         }
         .frame(minWidth: 600, minHeight: 400)
     }
-    
+
     private func archiveRow(_ session: LiveTranscriptionSession) -> some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Image(systemName: "doc.text.fill")
                         .foregroundStyle(self.theme.palette.accent)
-                    
+
                     Text(session.formattedStartTime)
                         .fontWeight(.medium)
-                    
+
                     Text("•")
                         .foregroundStyle(.secondary)
-                    
+
                     Text(session.formattedDuration)
                         .foregroundStyle(.secondary)
-                    
+
                     Text("•")
                         .foregroundStyle(.secondary)
-                    
+
                     Text("\(session.wordCount) words")
                         .foregroundStyle(.secondary)
                 }
                 .font(.caption)
-                
+
                 Text(session.previewText)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
             }
-            
+
             Spacer()
-            
+
             HStack(spacing: 8) {
                 Button {
                     // Check if there's unsaved work
-                    if !self.editableText.isEmpty && self.service.currentWordCount > 0 {
+                    if !self.editableText.isEmpty, self.service.currentWordCount > 0 {
                         self.sessionToLoad = session
                         self.showLoadConfirmation = true
                     } else {
@@ -715,7 +715,7 @@ struct LiveTranscriptionView: View {
                 }
                 .buttonStyle(.borderless)
                 .help("Load this transcription")
-                
+
                 Button(role: .destructive) {
                     self.showingDeleteConfirmation = session.id
                 } label: {
@@ -740,30 +740,30 @@ struct LiveTranscriptionView: View {
             Button("Cancel", role: .cancel) {}
         }
     }
-    
+
     // MARK: - Previous Recordings Section (Deprecated - moved to sheet)
-    
+
     private var filteredSessions: [LiveTranscriptionSession] {
         if self.searchQuery.isEmpty {
             return self.store.sessions
         }
         return self.store.searchSessions(query: self.searchQuery)
     }
-    
+
     private var previousRecordingsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Text("Previous Recordings")
                     .font(.headline)
-                
+
                 Spacer()
-                
+
                 // Search field
                 HStack {
                     Image(systemName: "magnifyingglass")
                         .foregroundStyle(.secondary)
                         .font(.caption)
-                    
+
                     TextField("Search...", text: self.$searchQuery)
                         .textFieldStyle(.plain)
                         .font(.caption)
@@ -774,7 +774,7 @@ struct LiveTranscriptionView: View {
                 .cornerRadius(6)
                 .frame(width: 200)
             }
-            
+
             if self.filteredSessions.isEmpty {
                 Text(self.searchQuery.isEmpty ? "No recordings yet" : "No matching recordings")
                     .font(.caption)
@@ -790,7 +790,7 @@ struct LiveTranscriptionView: View {
             }
         }
     }
-    
+
     private func sessionRow(_ session: LiveTranscriptionSession) -> some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
@@ -798,36 +798,36 @@ struct LiveTranscriptionView: View {
                     Image(systemName: "doc.text.fill")
                         .foregroundStyle(self.theme.palette.accent)
                         .font(.caption)
-                    
+
                     Text(session.formattedStartTime)
                         .font(.caption)
                         .fontWeight(.medium)
-                    
+
                     Text("•")
                         .foregroundStyle(.secondary)
                         .font(.caption)
-                    
+
                     Text(session.formattedDuration)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    
+
                     Text("•")
                         .foregroundStyle(.secondary)
                         .font(.caption)
-                    
+
                     Text("\(session.wordCount) words")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                
+
                 Text(session.previewText)
                     .font(.caption)
                     .foregroundStyle(.primary.opacity(0.8))
                     .lineLimit(2)
             }
-            
+
             Spacer()
-            
+
             HStack(spacing: 6) {
                 // Load button
                 Button(action: {
@@ -837,7 +837,7 @@ struct LiveTranscriptionView: View {
                 }
                 .buttonStyle(.borderless)
                 .help("Load session")
-                
+
                 // Delete button
                 Button(action: {
                     self.showingDeleteConfirmation = session.id
@@ -872,19 +872,19 @@ struct LiveTranscriptionView: View {
             Button("Cancel", role: .cancel) {}
         }
     }
-    
+
     // MARK: - Helper Methods
-    
+
     private func updateEditableText(forceUpdate: Bool = false) {
         // Don't update while user is actively editing (unless forced, like timestamp toggle)
-        if self.isEditorFocused && !forceUpdate {
+        if self.isEditorFocused, !forceUpdate {
             return
         }
-        
+
         let newText: String
         if self.showTimestamps {
             // Build text with inline timestamps
-            if self.service.transcriptionSegments.isEmpty && !self.service.completedText.isEmpty {
+            if self.service.transcriptionSegments.isEmpty, !self.service.completedText.isEmpty {
                 // Fallback: Parse completedText into paragraphs with generated timestamps
                 let paragraphs = self.service.completedText.components(separatedBy: "\n\n").filter { !$0.isEmpty }
                 newText = paragraphs.enumerated().map { index, paragraph in
@@ -903,7 +903,7 @@ struct LiveTranscriptionView: View {
             // Use plain completed text from service
             newText = self.service.completedText
         }
-        
+
         // Simple: Just update from service (user edits go directly to service anyway)
         if newText != self.editableText {
             self.isSyncingFromService = true
@@ -913,94 +913,94 @@ struct LiveTranscriptionView: View {
             }
         }
     }
-    
+
     private func formatTimestamp(for index: Int) -> String {
         // Generate placeholder timestamps for segments without real timing data
         // Use session start time if available, otherwise current time
         let baseTime = self.service.sessionStartTime ?? Date()
-        let segmentTime = baseTime.addingTimeInterval(TimeInterval(index * 5))  // 5 seconds apart
-        
+        let segmentTime = baseTime.addingTimeInterval(TimeInterval(index * 5)) // 5 seconds apart
+
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss"
         return formatter.string(from: segmentTime)
     }
-    
+
     private func addCustomMetadata() {
         let key = self.newMetadataKey.trimmingCharacters(in: .whitespacesAndNewlines)
         let value = self.newMetadataValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        
+
         guard !key.isEmpty else { return }
-        
+
         self.customMetadata[key] = value
         self.service.addMetadata(key: key, value: value)
-        
+
         self.showingNewMetadataDialog = false
         self.newMetadataKey = ""
         self.newMetadataValue = ""
     }
-    
+
     private func removeCustomMetadata(key: String) {
         self.customMetadata.removeValue(forKey: key)
         self.service.removeMetadata(key: key)
     }
-    
+
     private func loadSession(_ session: LiveTranscriptionSession) {
         self.editableText = session.transcribedText
         self.customMetadata = session.customMetadata
         self.transcriptionTitle = session.customMetadata["title"] ?? session.formattedStartTime
-        
+
         AnalyticsService.shared.capture(.liveTranscriptionLoaded)
     }
-    
+
     private func formatDuration(_ duration: TimeInterval) -> String {
         let seconds = Int(duration)
         let hours = seconds / 3600
         let minutes = (seconds % 3600) / 60
         let secs = seconds % 60
-        
+
         if hours > 0 {
             return String(format: "%d:%02d:%02d", hours, minutes, secs)
         } else {
             return String(format: "%d:%02d", minutes, secs)
         }
     }
-    
+
     private func formatDateTime(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
         return formatter.string(from: date)
     }
-    
+
     private func generateDefaultTitle() -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm"
         return dateFormatter.string(from: Date())
     }
-    
+
     private func generateFilename() -> String {
         // Use title if available, otherwise use timestamp
         let safeName = self.transcriptionTitle.isEmpty ? self.generateDefaultTitle() : self.transcriptionTitle
         let sanitized = safeName.replacingOccurrences(of: "[^a-zA-Z0-9_-]", with: "_", options: .regularExpression)
         return "\(sanitized).md"
     }
-    
+
     private func restoreSessionIfNeeded() {
         // Try to restore a backed-up session
         self.store.restoreCurrentSessionBackup()
-        
+
         // If we have a restored session, load it into the view
         if let session = self.store.currentSession {
             self.editableText = session.transcribedText
             self.customMetadata = session.customMetadata
             self.transcriptionTitle = session.customMetadata["title"] ?? session.formattedStartTime
-            
+
             // IMPORTANT: Explicitly sync buffer to prevent clearing on next start
             self.service.updateCompletedText(session.transcribedText)
-            
+
             // Note: We don't auto-resume recording, user must explicitly resume
             // This prevents accidentally recording when returning to the view
-            
+
             DebugLogger.shared.info("Restored session from backup with \(session.wordCount) words", source: "LiveTranscriptionView")
         }
     }
@@ -1009,22 +1009,24 @@ struct LiveTranscriptionView: View {
 // MARK: - File Document
 
 struct LiveTranscriptionExportDocument: FileDocument {
-    static var readableContentTypes: [UTType] { [.plainText, .html] }
-    
+    static var readableContentTypes: [UTType] {
+        [.plainText, .html]
+    }
+
     let session: LiveTranscriptionSession?
     let format: LiveTranscriptionView.ExportFormat
     let title: String
-    
+
     init(session: LiveTranscriptionSession?, format: LiveTranscriptionView.ExportFormat, title: String) {
         self.session = session
         self.format = format
         self.title = title
     }
-    
+
     init(configuration: ReadConfiguration) throws {
         throw CocoaError(.fileReadUnknown)
     }
-    
+
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
         guard let session = self.session else {
             throw NSError(
@@ -1033,27 +1035,26 @@ struct LiveTranscriptionExportDocument: FileDocument {
                 userInfo: [NSLocalizedDescriptionKey: "No active session"]
             )
         }
-        
-        let content: String
-        switch self.format {
+
+        let content: String = switch self.format {
         case .plainText:
-            content = self.exportPlainText(session)
+            self.exportPlainText(session)
         case .withTimestamps:
-            content = self.exportWithTimestamps(session)
+            self.exportWithTimestamps(session)
         case .htmlSpans:
-            content = self.exportHTML(session)
+            self.exportHTML(session)
         }
-        
+
         let data = Data(content.utf8)
         return FileWrapper(regularFileWithContents: data)
     }
-    
+
     private func exportPlainText(_ session: LiveTranscriptionSession) -> String {
         var output = "# \(self.title)\n\n"
         output += session.transcribedText
         return output
     }
-    
+
     private func exportWithTimestamps(_ session: LiveTranscriptionSession) -> String {
         // Build YAML frontmatter
         var frontmatter = """
@@ -1062,54 +1063,52 @@ struct LiveTranscriptionExportDocument: FileDocument {
         title: "\(self.title)"
         start_time: "\(ISO8601DateFormatter().string(from: session.startTime))"
         """
-        
+
         if let endTime = session.endTime {
             frontmatter += "\nend_time: \"\(ISO8601DateFormatter().string(from: endTime))\""
         }
-        
+
         frontmatter += """
-        
+
         duration: \(Int(session.duration))
         word_count: \(session.wordCount)
         segment_count: \(session.segments.count)
         app_name: "\(session.appName)"
         device_info: "\(session.deviceInfo)"
         """
-        
+
         // Add custom metadata
-        for (key, value) in session.customMetadata.sorted(by: { $0.key < $1.key }) {
-            if key != "title" {  // Skip title, already in frontmatter
-                frontmatter += "\n\(key): \"\(value)\""
-            }
+        for (key, value) in session.customMetadata.sorted(by: { $0.key < $1.key }) where key != "title" {
+            frontmatter += "\n\(key): \"\(value)\""
         }
-        
+
         frontmatter += "\n---\n\n"
-        
+
         var output = frontmatter
         output += "# \(self.title)\n\n"
-        
+
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss.SSS"
-        
+
         // Export each segment with timestamps
         for segment in session.segments {
             let start = formatter.string(from: segment.startTime)
             let end = formatter.string(from: segment.endTime)
             output += "[\(start) - \(end)] \(segment.text)\n\n"
         }
-        
+
         // If no segments, fall back to plain text
         if session.segments.isEmpty {
             output += session.transcribedText
         }
-        
+
         return output
     }
-    
+
     private func exportHTML(_ session: LiveTranscriptionSession) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss.SSS"
-        
+
         var html = """
         <!DOCTYPE html>
         <html>
@@ -1128,7 +1127,7 @@ struct LiveTranscriptionExportDocument: FileDocument {
             <h1>\(self.title)</h1>
             <div class="transcription">
         """
-        
+
         // Use segments with timestamp spans
         if !session.segments.isEmpty {
             for segment in session.segments {
@@ -1136,7 +1135,7 @@ struct LiveTranscriptionExportDocument: FileDocument {
                 let endMs = String(format: "%.3f", segment.endTime.timeIntervalSince1970)
                 let start = formatter.string(from: segment.startTime)
                 let end = formatter.string(from: segment.endTime)
-                
+
                 html += "        <p class=\"segment\"><span data-start=\"\(start)\" data-end=\"\(end)\" data-start-ms=\"\(startMs)\" data-end-ms=\"\(endMs)\">\(segment.text)</span></p>\n"
             }
         } else {
@@ -1146,13 +1145,13 @@ struct LiveTranscriptionExportDocument: FileDocument {
                 html += "        <p class=\"segment\">\(paragraph)</p>\n"
             }
         }
-        
+
         html += """
             </div>
         </body>
         </html>
         """
-        
+
         return html
     }
 }
@@ -1167,12 +1166,12 @@ extension View {
 
 struct RectCorner: OptionSet {
     let rawValue: Int
-    
+
     static let topLeft = RectCorner(rawValue: 1 << 0)
     static let topRight = RectCorner(rawValue: 1 << 1)
     static let bottomLeft = RectCorner(rawValue: 1 << 2)
     static let bottomRight = RectCorner(rawValue: 1 << 3)
-    
+
     static let allCorners: RectCorner = [.topLeft, .topRight, .bottomLeft, .bottomRight]
 }
 
@@ -1182,46 +1181,54 @@ struct RoundedCorner: Shape {
 
     func path(in rect: CGRect) -> Path {
         var path = Path()
-        
-        let topLeft = corners.contains(.topLeft) ? radius : 0
-        let topRight = corners.contains(.topRight) ? radius : 0
-        let bottomLeft = corners.contains(.bottomLeft) ? radius : 0
-        let bottomRight = corners.contains(.bottomRight) ? radius : 0
-        
+
+        let topLeft = self.corners.contains(.topLeft) ? self.radius : 0
+        let topRight = self.corners.contains(.topRight) ? self.radius : 0
+        let bottomLeft = self.corners.contains(.bottomLeft) ? self.radius : 0
+        let bottomRight = self.corners.contains(.bottomRight) ? self.radius : 0
+
         path.move(to: CGPoint(x: rect.minX + topLeft, y: rect.minY))
         path.addLine(to: CGPoint(x: rect.maxX - topRight, y: rect.minY))
         if topRight > 0 {
-            path.addArc(center: CGPoint(x: rect.maxX - topRight, y: rect.minY + topRight),
-                       radius: topRight,
-                       startAngle: Angle(degrees: -90),
-                       endAngle: Angle(degrees: 0),
-                       clockwise: false)
+            path.addArc(
+                center: CGPoint(x: rect.maxX - topRight, y: rect.minY + topRight),
+                radius: topRight,
+                startAngle: Angle(degrees: -90),
+                endAngle: Angle(degrees: 0),
+                clockwise: false
+            )
         }
         path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - bottomRight))
         if bottomRight > 0 {
-            path.addArc(center: CGPoint(x: rect.maxX - bottomRight, y: rect.maxY - bottomRight),
-                       radius: bottomRight,
-                       startAngle: Angle(degrees: 0),
-                       endAngle: Angle(degrees: 90),
-                       clockwise: false)
+            path.addArc(
+                center: CGPoint(x: rect.maxX - bottomRight, y: rect.maxY - bottomRight),
+                radius: bottomRight,
+                startAngle: Angle(degrees: 0),
+                endAngle: Angle(degrees: 90),
+                clockwise: false
+            )
         }
         path.addLine(to: CGPoint(x: rect.minX + bottomLeft, y: rect.maxY))
         if bottomLeft > 0 {
-            path.addArc(center: CGPoint(x: rect.minX + bottomLeft, y: rect.maxY - bottomLeft),
-                       radius: bottomLeft,
-                       startAngle: Angle(degrees: 90),
-                       endAngle: Angle(degrees: 180),
-                       clockwise: false)
+            path.addArc(
+                center: CGPoint(x: rect.minX + bottomLeft, y: rect.maxY - bottomLeft),
+                radius: bottomLeft,
+                startAngle: Angle(degrees: 90),
+                endAngle: Angle(degrees: 180),
+                clockwise: false
+            )
         }
         path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + topLeft))
         if topLeft > 0 {
-            path.addArc(center: CGPoint(x: rect.minX + topLeft, y: rect.minY + topLeft),
-                       radius: topLeft,
-                       startAngle: Angle(degrees: 180),
-                       endAngle: Angle(degrees: 270),
-                       clockwise: false)
+            path.addArc(
+                center: CGPoint(x: rect.minX + topLeft, y: rect.minY + topLeft),
+                radius: topLeft,
+                startAngle: Angle(degrees: 180),
+                endAngle: Angle(degrees: 270),
+                clockwise: false
+            )
         }
-        
+
         return path
     }
 }
