@@ -27,6 +27,7 @@ enum SidebarItem: Hashable {
     case feedback
     case commandMode
     case rewriteMode
+    case liveTranscription
 }
 
 // MARK: - Minimal FluidAudio ASR Service (finalized text, macOS)
@@ -813,6 +814,18 @@ struct ContentView: View {
             }
             .listRowBackground(self.sidebarRowBackground(for: .commandMode))
 
+            NavigationLink(value: SidebarItem.rewriteMode) {
+                Label("Write Mode", systemImage: "pencil.and.outline")
+                    .font(.system(size: 15, weight: .medium))
+            }
+            .listRowBackground(self.sidebarRowBackground(for: .rewriteMode))
+
+            NavigationLink(value: SidebarItem.liveTranscription) {
+                Label("Live Transcription", systemImage: "waveform.badge.mic")
+                    .font(.system(size: 15, weight: .medium))
+            }
+            .listRowBackground(self.sidebarRowBackground(for: .liveTranscription))
+
             NavigationLink(value: SidebarItem.meetingTools) {
                 Label("File Transcription", systemImage: "doc.text.fill")
                     .font(.system(size: 15, weight: .medium))
@@ -916,6 +929,8 @@ struct ContentView: View {
             return AnyView(self.commandModeView)
         case .rewriteMode:
             return AnyView(self.rewriteModeView)
+        case .liveTranscription:
+            return AnyView(LiveTranscriptionView(asrService: self.appServices.asr))
         case .history:
             return AnyView(TranscriptionHistoryView())
         }
