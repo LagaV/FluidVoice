@@ -23,6 +23,14 @@ enum AnalyticsEvent: String {
     // Meeting transcription
     case meetingTranscriptionCompleted = "meeting_transcription_completed"
 
+    // Live transcription
+    case liveTranscriptionStarted = "live_transcription_started"
+    case liveTranscriptionPaused = "live_transcription_paused"
+    case liveTranscriptionResumed = "live_transcription_resumed"
+    case liveTranscriptionCompleted = "live_transcription_completed"
+    case liveTranscriptionSaved = "live_transcription_saved"
+    case liveTranscriptionLoaded = "live_transcription_loaded"
+
     // Prompts
     case customPromptUsed = "custom_prompt_used"
 

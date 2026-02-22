@@ -48,6 +48,7 @@ https://github.com/user-attachments/assets/c57ef6d5-f0a1-4a3f-a121-637533442c24
 
 
 ## Features
+- **Live Transcription Mode**: Extended recording sessions with real-time preview, editable transcripts, and multi-format export (Plain Text, Markdown with timestamps, HTML)
 - **Live Preview Mode**: Real-time transcription preview in overlay
 - **Multiple Speech Models**: Parakeet TDT v3 & v2, Apple Speech, and Whisper
 - **Real-time transcription** with extremely low latency

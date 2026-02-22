@@ -99,7 +99,7 @@ final class LLMClient {
         var maxRetries: Int = 3
         var retryDelayMs: Int = 200
 
-        // Timeout configuration (nil = use default)
+        /// Timeout configuration (nil = use default)
         var timeoutSeconds: TimeInterval?
 
         // Optional real-time callbacks (for streaming UI updates)

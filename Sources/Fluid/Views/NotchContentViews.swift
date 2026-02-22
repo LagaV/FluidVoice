@@ -13,7 +13,7 @@ import SwiftUI
 @MainActor
 class NotchContentState: ObservableObject {
     static let shared = NotchContentState()
-    // Keep overlay state bounded even during very long recordings.
+    /// Keep overlay state bounded even during very long recordings.
     private static let maxStoredTranscriptionCharacters = SettingsStore.transcriptionPreviewCharLimitRange.upperBound
 
     @Published var transcriptionText: String = ""
@@ -28,7 +28,7 @@ class NotchContentState: ObservableObject {
     /// Captured at recording start to keep the target stable for the session.
     @Published var recordingTargetPID: pid_t? = nil
 
-    // Cached transcription preview text to avoid recomputing on every render
+    /// Cached transcription preview text to avoid recomputing on every render
     @Published private(set) var cachedPreviewText: String = ""
 
     // MARK: - Expanded Command Output State
@@ -294,8 +294,8 @@ struct NotchExpandedView: View {
         }
     }
 
-    // ContentView writes transient status strings into transcriptionText while processing
-    // (e.g. "Transcribing...", "Refining..."). Prefer that when present.
+    /// ContentView writes transient status strings into transcriptionText while processing
+    /// (e.g. "Transcribing...", "Refining..."). Prefer that when present.
     private var processingStatusText: String {
         let t = self.contentState.transcriptionText.trimmingCharacters(in: .whitespacesAndNewlines)
         return t.isEmpty ? self.processingLabel : t
@@ -499,7 +499,7 @@ struct NotchExpandedView: View {
             }
 
             // Transcription preview (wrapped, fixed width)
-            if self.hasTranscription && !self.contentState.isProcessing {
+            if self.hasTranscription, !self.contentState.isProcessing {
                 let previewText = self.contentState.cachedPreviewText
                 if !previewText.isEmpty {
                     ScrollViewReader { proxy in
@@ -931,7 +931,7 @@ struct NotchCommandOutputExpandedView: View {
 
     private var transcriptionPreview: some View {
         Group {
-            if self.contentState.isRecordingInExpandedMode && !self.contentState.transcriptionText.isEmpty {
+            if self.contentState.isRecordingInExpandedMode, !self.contentState.transcriptionText.isEmpty {
                 let previewText = self.contentState.cachedPreviewText
                 if !previewText.isEmpty {
                     ScrollViewReader { proxy in

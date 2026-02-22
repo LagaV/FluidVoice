@@ -287,11 +287,10 @@ extension TranscriptionHistoryStore {
         let skipWeekends = SettingsStore.shared.weekendsDontBreakStreak
 
         // Filter out weekend days if setting is enabled (so weekend usage doesn't interfere)
-        let days: [Date]
-        if skipWeekends {
-            days = self.activeDays.filter { !calendar.isDateInWeekend($0) }
+        let days: [Date] = if skipWeekends {
+            self.activeDays.filter { !calendar.isDateInWeekend($0) }
         } else {
-            days = self.activeDays
+            self.activeDays
         }
 
         guard !days.isEmpty else { return 0 }
@@ -339,11 +338,10 @@ extension TranscriptionHistoryStore {
         var previousDay = firstActiveDay
 
         for day in days.dropFirst() {
-            let expectedPrevious: Date?
-            if skipWeekends {
-                expectedPrevious = self.previousWeekday(before: previousDay, calendar: calendar)
+            let expectedPrevious: Date? = if skipWeekends {
+                self.previousWeekday(before: previousDay, calendar: calendar)
             } else {
-                expectedPrevious = calendar.date(byAdding: .day, value: -1, to: previousDay)
+                calendar.date(byAdding: .day, value: -1, to: previousDay)
             }
 
             guard let expected = expectedPrevious else { break }
@@ -374,11 +372,10 @@ extension TranscriptionHistoryStore {
         let skipWeekends = SettingsStore.shared.weekendsDontBreakStreak
 
         // Filter out weekend days if setting is enabled (so weekend usage doesn't interfere)
-        let days: [Date]
-        if skipWeekends {
-            days = self.activeDays.filter { !calendar.isDateInWeekend($0) }.sorted()
+        let days: [Date] = if skipWeekends {
+            self.activeDays.filter { !calendar.isDateInWeekend($0) }.sorted()
         } else {
-            days = self.activeDays.sorted() // oldest first for this calculation
+            self.activeDays.sorted() // oldest first for this calculation
         }
 
         guard !days.isEmpty else { return 0 }
@@ -388,11 +385,10 @@ extension TranscriptionHistoryStore {
         var previousDay = days[0]
 
         for day in days.dropFirst() {
-            let expectedNext: Date?
-            if skipWeekends {
-                expectedNext = self.nextWeekday(after: previousDay, calendar: calendar)
+            let expectedNext: Date? = if skipWeekends {
+                self.nextWeekday(after: previousDay, calendar: calendar)
             } else {
-                expectedNext = calendar.date(byAdding: .day, value: 1, to: previousDay)
+                calendar.date(byAdding: .day, value: 1, to: previousDay)
             }
 
             if let expected = expectedNext, day == expected {

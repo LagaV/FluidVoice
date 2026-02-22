@@ -742,8 +742,17 @@ final class GlobalHotkeyManager: NSObject {
     }
 
     private func triggerCommandMode() {
+        let liveTranscriptionActive = self.asrService.isLiveTranscriptionActive
+        
         Task { @MainActor [weak self] in
             guard let self = self else { return }
+            
+            // Block command mode if Live Transcription is active
+            if liveTranscriptionActive {
+                DebugLogger.shared.debug("Ignoring command mode - Live Transcription is active", source: "GlobalHotkeyManager")
+                return
+            }
+            
             DebugLogger.shared.info("Command mode hotkey triggered", source: "GlobalHotkeyManager")
             DebugLogger.shared.debug(
                 "GlobalHotkeyManager: command callback path, isRunning=\(self.asrService.isRunning), isReady=\(self.asrService.isAsrReady)",
@@ -754,8 +763,17 @@ final class GlobalHotkeyManager: NSObject {
     }
 
     private func triggerRewriteMode() {
+        let liveTranscriptionActive = self.asrService.isLiveTranscriptionActive
+        
         Task { @MainActor [weak self] in
             guard let self = self else { return }
+            
+            // Block rewrite mode if Live Transcription is active
+            if liveTranscriptionActive {
+                DebugLogger.shared.debug("Ignoring rewrite mode - Live Transcription is active", source: "GlobalHotkeyManager")
+                return
+            }
+            
             DebugLogger.shared.info("Rewrite mode hotkey triggered", source: "GlobalHotkeyManager")
             DebugLogger.shared.debug(
                 "GlobalHotkeyManager: rewrite callback path, isRunning=\(self.asrService.isRunning), isReady=\(self.asrService.isAsrReady)",
@@ -807,6 +825,7 @@ final class GlobalHotkeyManager: NSObject {
         // Capture state at event time to prevent race conditions
         let shouldStop = self.asrService.isRunning
         let alreadyProcessing = self.isProcessingStop
+        let liveTranscriptionActive = self.asrService.isLiveTranscriptionActive
 
         Task { @MainActor [weak self] in
             guard let self = self else { return }
@@ -814,6 +833,12 @@ final class GlobalHotkeyManager: NSObject {
             // Prevent new operations while stop is processing
             if alreadyProcessing {
                 DebugLogger.shared.debug("Ignoring toggle - stop already in progress", source: "GlobalHotkeyManager")
+                return
+            }
+            
+            // Block hotkey transcription if Live Transcription is active
+            if !shouldStop && liveTranscriptionActive {
+                DebugLogger.shared.debug("Ignoring hotkey - Live Transcription is active", source: "GlobalHotkeyManager")
                 return
             }
 
@@ -834,6 +859,7 @@ final class GlobalHotkeyManager: NSObject {
         // Capture state at event time
         let alreadyRunning = self.asrService.isRunning
         let alreadyProcessing = self.isProcessingStop
+        let liveTranscriptionActive = self.asrService.isLiveTranscriptionActive
 
         Task { @MainActor [weak self] in
             guard let self = self else { return }
@@ -841,6 +867,12 @@ final class GlobalHotkeyManager: NSObject {
             // Prevent starting while stop is processing
             if alreadyProcessing {
                 DebugLogger.shared.debug("Ignoring start - stop in progress", source: "GlobalHotkeyManager")
+                return
+            }
+            
+            // Block hotkey transcription if Live Transcription is active
+            if liveTranscriptionActive {
+                DebugLogger.shared.debug("Ignoring start - Live Transcription is active", source: "GlobalHotkeyManager")
                 return
             }
 

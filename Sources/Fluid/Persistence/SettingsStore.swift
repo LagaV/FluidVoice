@@ -130,8 +130,13 @@ final class SettingsStore: ObservableObject {
         static let defaultWritePromptOverride = "DefaultWritePromptOverride" // legacy fallback key
         static let defaultRewritePromptOverride = "DefaultRewritePromptOverride" // legacy fallback key
 
-        // Streak Settings
+        /// Streak Settings
         static let weekendsDontBreakStreak = "WeekendsDontBreakStreak"
+
+        // Live Transcription Keys
+        static let liveTranscriptionStoragePath = "LiveTranscriptionStoragePath"
+        static let liveTranscriptionAutoSave = "LiveTranscriptionAutoSave"
+        static let liveTranscriptionSegmentInterval = "LiveTranscriptionSegmentInterval"
     }
 
     // MARK: - Prompt Profiles (Unified)
@@ -1601,6 +1606,48 @@ final class SettingsStore: ObservableObject {
         set {
             objectWillChange.send()
             self.defaults.set(newValue, forKey: Keys.saveTranscriptionHistory)
+        }
+    }
+
+    // MARK: - Live Transcription Settings
+
+    /// Storage path for live transcription sessions
+    var liveTranscriptionStoragePath: String {
+        get {
+            if let path = self.defaults.string(forKey: Keys.liveTranscriptionStoragePath), !path.isEmpty {
+                return path
+            }
+            // Default: ~/Documents/FluidVoice/LiveTranscriptions
+            let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.path ?? NSHomeDirectory()
+            return (documentsPath as NSString).appendingPathComponent("FluidVoice/LiveTranscriptions")
+        }
+        set {
+            objectWillChange.send()
+            self.defaults.set(newValue, forKey: Keys.liveTranscriptionStoragePath)
+        }
+    }
+
+    /// Whether to auto-save sessions to file when completed
+    var liveTranscriptionAutoSave: Bool {
+        get {
+            let value = self.defaults.object(forKey: Keys.liveTranscriptionAutoSave)
+            return value as? Bool ?? true // Default to true (auto-save enabled)
+        }
+        set {
+            objectWillChange.send()
+            self.defaults.set(newValue, forKey: Keys.liveTranscriptionAutoSave)
+        }
+    }
+
+    /// Interval in seconds for processing transcription segments
+    var liveTranscriptionSegmentInterval: Double {
+        get {
+            let value = self.defaults.double(forKey: Keys.liveTranscriptionSegmentInterval)
+            return value > 0 ? value : 3.0 // Default to 3 seconds
+        }
+        set {
+            objectWillChange.send()
+            self.defaults.set(max(1.0, min(10.0, newValue)), forKey: Keys.liveTranscriptionSegmentInterval) // Clamp 1-10 seconds
         }
     }
 
