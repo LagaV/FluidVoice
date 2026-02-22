@@ -40,7 +40,8 @@ Queues an audio file for transcription.
 
 ```json
 {
-  "id": "file:///Users/me/audio.wav",
+  "id": "uuid-1234-5678",
+  "url": "file:///Users/me/audio.wav",
   "status": "pending"
 }
 ```
