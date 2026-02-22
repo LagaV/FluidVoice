@@ -83,18 +83,17 @@ final class BacklogManager: ObservableObject {
     
     // MARK: - Job Management
     
-    func addJob(url: URL, modelId: String?) {
+    @discardableResult
+    func addJob(url: URL, modelId: String?) -> TranscriptionJob {
         // Check for existing job with same URL AND same model
         // If modelId is nil, we treat it as "default/unspecified".
         // We only block if there's an exact match on (URL, modelId).
         
-        let exists = jobs.contains { job in
+        if let existing = jobs.first(where: { job in
             job.fileURL == url && job.modelId == modelId
-        }
-        
-        guard !exists else { 
+        }) {
             DebugLogger.shared.info("Skipping duplicate job for \(url.lastPathComponent) (model: \(modelId ?? "nil"))", source: "BacklogManager")
-            return 
+            return existing
         }
         
         let job = TranscriptionJob(fileURL: url, modelId: modelId)
@@ -103,6 +102,7 @@ final class BacklogManager: ObservableObject {
         
         DebugLogger.shared.info("Added transcription job: \(url.lastPathComponent) (model: \(modelId ?? "default"))", source: "BacklogManager")
         processNextJob()
+        return job
     }
     
     /// Returns all jobs matching the given URL.

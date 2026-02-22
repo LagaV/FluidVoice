@@ -111,11 +111,13 @@ final class APIService: ObservableObject {
 
             // Fire and forget (or wait if we want to confirm it's queued)
             // We'll wait to ensure it's in the queue before returning
-            self.runOnMainVoid {
+            let job = self.runOnMain {
                 BacklogManager.shared.addJob(url: url, modelId: modelId)
             }
+            
+            guard let job else { return .internalServerError }
 
-            return .ok(.json(["id": url.absoluteString, "status": "pending"]))
+            return .ok(.json(["id": job.id, "url": url.absoluteString, "status": "pending"]))
         }
 
         // GET /status
