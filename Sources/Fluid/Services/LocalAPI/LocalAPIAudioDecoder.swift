@@ -3,12 +3,12 @@ import Foundation
 
 enum LocalAPIAudioDecoder {
     static let sampleRate: Double = 16_000
-    static let maxDurationSeconds: Double = 300
 
     static func samples(from fileURL: URL) throws -> [Float] {
         let file = try AVAudioFile(forReading: fileURL)
         let sourceFormat = file.processingFormat
-        let maxFrames = AVAudioFramePosition(sourceFormat.sampleRate * self.maxDurationSeconds)
+        let maxDurationSeconds = LocalAPI.Configuration.current.fileUploadDurationSeconds
+        let maxFrames = maxDurationSeconds.map { AVAudioFramePosition(sourceFormat.sampleRate * $0) } ?? file.length
         let framesToRead = min(file.length, maxFrames)
         guard framesToRead > 0 else { return [] }
 
@@ -42,13 +42,15 @@ enum LocalAPIAudioDecoder {
             throw NSError(domain: "LocalAPIAudioDecoder", code: -6, userInfo: [NSLocalizedDescriptionKey: "Audio file has an invalid sample rate."])
         }
 
-        let maxFrames = AVAudioFramePosition(sourceFormat.sampleRate * self.maxDurationSeconds)
-        guard file.length <= maxFrames else {
-            throw NSError(
-                domain: "LocalAPIAudioDecoder",
-                code: -5,
-                userInfo: [NSLocalizedDescriptionKey: "Audio file exceeds the \(Int(self.maxDurationSeconds)) second API limit."]
-            )
+        if let maxDurationSeconds = LocalAPI.Configuration.current.fileUploadDurationSeconds {
+            let maxFrames = AVAudioFramePosition(sourceFormat.sampleRate * maxDurationSeconds)
+            guard file.length <= maxFrames else {
+                throw NSError(
+                    domain: "LocalAPIAudioDecoder",
+                    code: -5,
+                    userInfo: [NSLocalizedDescriptionKey: "Audio file exceeds the \(Int(maxDurationSeconds / 60)) minute API limit."]
+                )
+            }
         }
 
         return Int((Double(file.length) * self.sampleRate / sourceFormat.sampleRate).rounded())

@@ -43,6 +43,21 @@ final class InferenceAPIController: LocalAPIRouteHandler {
     private func transcribe(_ request: LocalAPI.Request) async -> LocalAPI.Response {
         do {
             if let fileURL = try self.decodeFilePath(from: request) {
+                let sampleCount = try LocalAPIAudioDecoder.validateDurationWithinLimit(for: fileURL)
+
+                if LocalAPI.Configuration.current.saveFileTranscriptionsToHistory {
+                    let transcriptionService = MeetingTranscriptionService(asrService: AppServices.shared.asr)
+                    let result = try await transcriptionService.transcribeFile(fileURL)
+                    return LocalAPI.json(
+                        TranscribeResponse(
+                            text: result.text,
+                            confidence: result.confidence,
+                            sampleCount: sampleCount,
+                            provider: SettingsStore.shared.selectedSpeechModel.displayName
+                        )
+                    )
+                }
+
                 let apiResult = try await AppServices.shared.asr.transcribeFileForAPI(fileURL)
                 return LocalAPI.json(
                     TranscribeResponse(

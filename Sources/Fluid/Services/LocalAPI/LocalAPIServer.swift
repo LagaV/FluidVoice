@@ -79,6 +79,11 @@ final class LocalAPIServer {
         self.listener = nil
     }
 
+    func reload() {
+        self.stop()
+        self.start()
+    }
+
     private func handleState(_ state: NWListener.State) {
         switch state {
         case .ready:

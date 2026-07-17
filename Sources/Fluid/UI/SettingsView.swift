@@ -64,6 +64,10 @@ struct SettingsView: View {
     @State private var isRollingBack: Bool = false
     @State private var audioHistoryBudgetText: String = Self.audioBudgetText(for: SettingsStore.shared.audioHistoryBudgetGB)
     @State private var audioHistoryUsageBytes: Int64 = DictationAudioHistoryStore.shared.audioUsageBytes()
+    @State private var localAPIEnabled = LocalAPI.Configuration.current.enabled
+    @State private var localAPIFileUploadDurationMinutes = LocalAPI.Configuration.current.fileUploadDurationMinutes
+    @State private var localAPIFileUploadDurationText = String(LocalAPI.Configuration.current.fileUploadDurationMinutes)
+    @State private var localAPISavesFileTranscriptionsToHistory = LocalAPI.Configuration.current.saveFileTranscriptionsToHistory
 
     let hotkeyManager: GlobalHotkeyManager?
     let menuBarManager: MenuBarManager
@@ -1455,6 +1459,8 @@ struct SettingsView: View {
                         .padding(16)
                 }
 
+                self.localAPISettingsCard
+
                 // Debug Settings Card
                 ThemedCard(style: .standard) {
                     VStack(alignment: .leading, spacing: 14) {
@@ -1593,6 +1599,23 @@ struct SettingsView: View {
         }
         .onChange(of: self.visualizerNoiseThreshold) { _, newValue in
             SettingsStore.shared.visualizerNoiseThreshold = newValue
+        }
+        .onChange(of: self.localAPIEnabled) { _, enabled in
+            UserDefaults.standard.set(enabled, forKey: LocalAPI.enabledDefaultsKey)
+            LocalAPIServer.shared.reload()
+        }
+        .onChange(of: self.localAPIFileUploadDurationMinutes) { _, minutes in
+            UserDefaults.standard.set(
+                LocalAPI.clampFileUploadDurationMinutes(minutes),
+                forKey: LocalAPI.fileUploadDurationMinutesDefaultsKey
+            )
+        }
+        .onChange(of: self.localAPIFileUploadDurationText) { _, text in
+            guard let minutes = Int(text.trimmingCharacters(in: .whitespacesAndNewlines)) else { return }
+            self.localAPIFileUploadDurationMinutes = LocalAPI.clampFileUploadDurationMinutes(minutes)
+        }
+        .onChange(of: self.localAPISavesFileTranscriptionsToHistory) { _, enabled in
+            UserDefaults.standard.set(enabled, forKey: LocalAPI.fileTranscriptionHistoryDefaultsKey)
         }
     }
 
@@ -2518,6 +2541,17 @@ struct FlowLayout: Layout {
 }
 
 private extension SettingsView {
+    var localAPIFileUploadDurationBinding: Binding<Int> {
+        Binding(
+            get: { self.localAPIFileUploadDurationMinutes },
+            set: { minutes in
+                let clampedMinutes = LocalAPI.clampFileUploadDurationMinutes(minutes)
+                self.localAPIFileUploadDurationMinutes = clampedMinutes
+                self.localAPIFileUploadDurationText = String(clampedMinutes)
+            }
+        )
+    }
+
     var lowLatencyAudioCaptureToggle: some View {
         Group {
             self.settingsToggleRow(
@@ -2538,6 +2572,73 @@ private extension SettingsView {
             .disabled(self.asr.isRunning)
 
             Divider().padding(.vertical, 8)
+        }
+    }
+}
+
+private extension SettingsView {
+    var localAPISettingsCard: some View {
+        ThemedCard(style: .standard) {
+            VStack(alignment: .leading, spacing: 14) {
+                Label("Local API", systemImage: "network")
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+
+                VStack(alignment: .leading, spacing: 12) {
+                    self.settingsToggleRow(
+                        title: "Enable Local API",
+                        description: "Allow other apps on this Mac to use FluidVoice transcription and text processing.",
+                        footnote: "The API only accepts connections from this Mac at http://127.0.0.1:\(LocalAPI.defaultPort).",
+                        isOn: self.$localAPIEnabled
+                    )
+
+                    Divider().padding(.vertical, 4)
+
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Maximum file duration")
+                                .font(self.theme.typography.bodyStrong)
+                                .foregroundStyle(self.settingsTitleText)
+                            Text("Set 0 for no limit, or enter a limit in minutes.")
+                                .font(self.theme.typography.bodySmall)
+                                .foregroundStyle(self.settingsSecondaryText)
+                        }
+
+                        Spacer()
+
+                        HStack(spacing: 4) {
+                            TextField("", text: self.$localAPIFileUploadDurationText)
+                                .textFieldStyle(.roundedBorder)
+                                .multilineTextAlignment(.trailing)
+                                .frame(width: 48)
+                                .onSubmit {
+                                    self.localAPIFileUploadDurationText = String(self.localAPIFileUploadDurationMinutes)
+                                }
+
+                            Stepper(
+                                "",
+                                value: self.localAPIFileUploadDurationBinding,
+                                in: LocalAPI.fileUploadDurationMinutesRange
+                            )
+                            .labelsHidden()
+
+                            Text(self.localAPIFileUploadDurationMinutes == 0 ? "unlimited" : "min")
+                                .font(self.theme.typography.bodySmall)
+                                .foregroundStyle(self.settingsSecondaryText)
+                        }
+                    }
+
+                    Divider().padding(.vertical, 4)
+
+                    self.settingsToggleRow(
+                        title: "Save API file transcriptions to history",
+                        description: "Show successful API file-path transcriptions in File Transcriptions history.",
+                        footnote: "Raw and base64 audio requests are not saved.",
+                        isOn: self.$localAPISavesFileTranscriptionsToHistory
+                    )
+                }
+            }
+            .padding(16)
         }
     }
 }

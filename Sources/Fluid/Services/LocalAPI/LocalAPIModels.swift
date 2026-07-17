@@ -3,24 +3,48 @@ import Foundation
 enum LocalAPI {
     static let defaultPort: UInt16 = 47_733
     static let maxRequestBytes = 25 * 1024 * 1024
+    static let defaultFileUploadDurationMinutes = 5
+    static let fileUploadDurationMinutesRange = 0...120
+    static let enabledDefaultsKey = "LocalAPIEnabled"
+    static let fileUploadDurationMinutesDefaultsKey = "LocalAPIFileUploadDurationMinutes"
+    static let fileTranscriptionHistoryDefaultsKey = "LocalAPISaveFileTranscriptionsToHistory"
 
     struct Configuration {
         let enabled: Bool
         let port: UInt16
+        let fileUploadDurationMinutes: Int
+        let saveFileTranscriptionsToHistory: Bool
+
+        var fileUploadDurationSeconds: Double? {
+            guard self.fileUploadDurationMinutes > 0 else { return nil }
+            return Double(self.fileUploadDurationMinutes * 60)
+        }
 
         static var current: Configuration {
             let defaults = UserDefaults.standard
             let enabled: Bool
-            if defaults.object(forKey: "LocalAPIEnabled") == nil {
+            if defaults.object(forKey: LocalAPI.enabledDefaultsKey) == nil {
                 enabled = false
             } else {
-                enabled = defaults.bool(forKey: "LocalAPIEnabled")
+                enabled = defaults.bool(forKey: LocalAPI.enabledDefaultsKey)
             }
 
             let rawPort = defaults.integer(forKey: "LocalAPIPort")
             let port = rawPort > 0 && rawPort <= Int(UInt16.max) ? UInt16(rawPort) : LocalAPI.defaultPort
-            return Configuration(enabled: enabled, port: port)
+            let savedDuration = defaults.object(forKey: LocalAPI.fileUploadDurationMinutesDefaultsKey) as? Int
+            let fileUploadDurationMinutes = LocalAPI.clampFileUploadDurationMinutes(savedDuration ?? LocalAPI.defaultFileUploadDurationMinutes)
+            let saveFileTranscriptionsToHistory = defaults.bool(forKey: LocalAPI.fileTranscriptionHistoryDefaultsKey)
+            return Configuration(
+                enabled: enabled,
+                port: port,
+                fileUploadDurationMinutes: fileUploadDurationMinutes,
+                saveFileTranscriptionsToHistory: saveFileTranscriptionsToHistory
+            )
         }
+    }
+
+    static func clampFileUploadDurationMinutes(_ value: Int) -> Int {
+        min(max(value, self.fileUploadDurationMinutesRange.lowerBound), self.fileUploadDurationMinutesRange.upperBound)
     }
 
     struct Request {
